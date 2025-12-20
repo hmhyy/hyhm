@@ -30,6 +30,7 @@ export class LessonHistoryController {
     status: 201,
     description: "Dars tarixi muvaffaqiyatli yaratildi",
   })
+  @ApiResponse({ status: 400, description: "Yaroqsiz ma'lumotlar" })
   create(@Body() createDto: CreateLessonHistoryDto) {
     return this.lessonHistoryService.create(createDto);
   }
