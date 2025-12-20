@@ -1,9 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TeachersController } from "./lessonHistory.controller";
+import { TeachersService } from "./lessonHistory.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { JwtModule } from "@nestjs/jwt";
-import { LessonHistory } from "./entities/lessonHistory.entity";
-import { TeacherService } from "src/teacher/teacher.service";
 
 @Module({
   imports: [
@@ -14,7 +13,7 @@ import { TeacherService } from "src/teacher/teacher.service";
     }),
   ],
   controllers: [TeachersController],
-  providers: [TeacherService],
-  exports: [TeacherService],
+  providers: [TeachersService],
+  exports: [TeachersService],
 })
-export class TeacherModule {}
+export class LessonHistoryModule {}

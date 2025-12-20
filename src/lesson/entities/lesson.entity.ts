@@ -84,4 +84,10 @@ export class Lesson {
 
   @OneToMany("Notification", (notification: any) => notification.lesson)
   notifications: any[];
+
+  @OneToMany("LessonHistory", (history: any) => history.lesson)
+  history: any[];
+
+  @OneToMany("Transaction", (transaction: any) => transaction.lesson)
+  transactions: any[];
 }

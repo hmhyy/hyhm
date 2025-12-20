@@ -10,6 +10,9 @@ import { LessonTemplateModule } from "./lessonTemplate/lessonTemplate.module";
 import { DeletedTeacher } from "./deletedTeacher/entities/deletedTeacher.entity";
 import { LessonModule } from "./lesson/lesson.module";
 import { NotificationModule } from "./notification/notification.module";
+import { LessonHistoryModule } from "./lessonHistory/lessonHistory.module";
+import { TransactionModule } from "./transaction/transaction.module";
+import { TeacherPaymentModule } from "./teacherPayment/teacherPayment.module";
 
 @Module({
   imports: [
@@ -38,6 +41,9 @@ import { NotificationModule } from "./notification/notification.module";
     LessonTemplateModule,
     LessonModule,
     NotificationModule,
+    LessonHistoryModule,
+    TransactionModule,
+    TeacherPaymentModule,
   ],
   controllers: [],
   providers: [],

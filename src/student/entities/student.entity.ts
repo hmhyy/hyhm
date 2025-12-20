@@ -52,8 +52,8 @@ export class Student {
   @OneToMany(() => Lesson, (lesson) => lesson.student)
   lesson: Lesson[];
 
-  @Column({ type: "uuid", nullable: true })
-  lessonHistory: string;
+  // @Column({ type: "uuid", nullable: true })
+  // lessonHistory: string;
 
   @Column({ type: "uuid", nullable: true })
   notification: string;
@@ -63,4 +63,10 @@ export class Student {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany("LessonHistory", (history: any) => history.student)
+  lessonHistory: any[];
+
+  @OneToMany("Transaction", (transaction: any) => transaction.student)
+  transactions: any[];
 }

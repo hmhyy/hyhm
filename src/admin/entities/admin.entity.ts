@@ -47,4 +47,7 @@ export class Admin {
 
   @OneToMany(() => DeletedTeacher, (deleted) => deleted.deletedBy)
   deletedTeacher: DeletedTeacher[];
+
+  @OneToMany("TeacherPayment", (payment: any) => payment.admin)
+  issuedPayments: any[];
 }
