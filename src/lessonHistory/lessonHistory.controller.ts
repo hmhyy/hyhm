@@ -8,61 +8,65 @@ import {
   Delete,
   UseGuards,
 } from "@nestjs/common";
-import { CreateTeacherDto } from "./dto/create-lesson-history.dto";
-import { UpdateTeacherDto } from "./dto/update-lesson-history.dto";
+import { CreateLessonHistoryDto } from "./dto/create-lesson-history.dto";
+import { UpdateLessonHistoryDto } from "./dto/update-lesson-history.dto";
 import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
-import { TeachersService } from "./lessonHistory.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { AdminGuard } from "../common/guards/admin.guard";
-import { JwtSelfGuard } from "../common/guards/jwt-self.guard";
+import { RolesGuard } from "../common/guards/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
+import { LessonHistoryService } from "./lessonHistory.service";
 
-@ApiTags("teachers")
-@Controller("teachers")
-export class TeachersController {
-  constructor(private readonly teachersService: TeachersService) {}
+@ApiTags("lesson-history")
+@Controller("lesson-history")
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class LessonHistoryController {
+  constructor(private readonly lessonHistoryService: LessonHistoryService) {}
 
-  //   @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiOperation({ summary: "Yangi o'qituvchi qo'shish" })
+  @Post()
+  @Roles("admin", "teacher")
+  @ApiOperation({ summary: "Dars tarixini yaratish" })
   @ApiResponse({
     status: 201,
-    description: "O'qituvchi muvaffaqiyatli yaratildi",
+    description: "Dars tarixi muvaffaqiyatli yaratildi",
   })
-  @ApiResponse({ status: 400, description: "Yaroqsiz ma'lumotlar" })
-  @Post()
-  create(@Body() createTeacherDto: CreateTeacherDto) {
-    return this.teachersService.create(createTeacherDto);
+  create(@Body() createDto: CreateLessonHistoryDto) {
+    return this.lessonHistoryService.create(createDto);
   }
 
-  //   @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiOperation({ summary: "Barcha o'qituvchilarni olish" })
-  @ApiResponse({ status: 200, description: "O'qituvchilar ro'yxati" })
   @Get()
+  @Roles("admin")
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: "Barcha darslar tarixini olish" })
+  @ApiResponse({ status: 200, description: "Darslar tarixi ro'yxati" })
   findAll() {
-    return this.teachersService.findAll();
+    return this.lessonHistoryService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard, JwtSelfGuard)
-  @ApiOperation({ summary: "ID bo'yicha bitta o'qituvchini olish" })
-  @ApiResponse({ status: 200, description: "O'qituvchi topildi" })
-  @ApiResponse({ status: 404, description: "O'qituvchi topilmadi" })
   @Get(":id")
+  @Roles("admin", "teacher", "student")
+  @ApiOperation({ summary: "ID bo'yicha dars tarixini olish" })
+  @ApiResponse({ status: 200, description: "Dars tarixi topildi" })
+  @ApiResponse({ status: 404, description: "Dars tarixi topilmadi" })
   findOne(@Param("id") id: string) {
-    return this.teachersService.findOne(id);
+    return this.lessonHistoryService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard, JwtSelfGuard)
-  @ApiOperation({ summary: "ID bo'yicha o'qituvchini yangilash" })
-  @ApiResponse({ status: 200, description: "O'qituvchi yangilandi" })
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateTeacherDto: UpdateTeacherDto) {
-    return this.teachersService.update(id, updateTeacherDto);
+  @Roles("admin")
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: "Dars tarixini yangilash" })
+  @ApiResponse({ status: 200, description: "Dars tarixi yangilandi" })
+  update(@Param("id") id: string, @Body() updateDto: UpdateLessonHistoryDto) {
+    return this.lessonHistoryService.update(id, updateDto);
   }
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiOperation({ summary: "ID bo'yicha o'qituvchini o'chirish" })
-  @ApiResponse({ status: 200, description: "O'qituvchi o'chirildi" })
   @Delete(":id")
+  @Roles("admin")
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: "Dars tarixini o'chirish" })
+  @ApiResponse({ status: 200, description: "Dars tarixi o'chirildi" })
   remove(@Param("id") id: string) {
-    return this.teachersService.remove(id);
+    return this.lessonHistoryService.remove(id);
   }
 }

@@ -99,4 +99,10 @@ export class Teacher {
 
   @OneToMany("Notification", (notification: any) => notification.student)
   notifications: any[];
+
+  @OneToMany("LessonHistory", (history: any) => history.teacher)
+  lessonHistory: any[];
+
+  @OneToMany("TeacherPayment", (payment: any) => payment.teacher)
+  payments: any[];
 }
