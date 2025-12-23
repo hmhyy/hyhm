@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Response } from "express";
@@ -10,20 +11,28 @@ import * as bcrypt from "bcrypt";
 import { Teacher } from "../../teacher/entities/teacher.entity";
 import { SignInDto } from "../dto/sign-in.dto";
 import { TeacherService } from "src/teacher/teacher.service";
+import { RegisterStep2Dto } from "../dto/register-step2.dto";
+import { RegisterStep3Dto } from "../dto/register-step3.dto";
+import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MailService } from "../../mail/mail.service";
 
 @Injectable()
 export class AuthTeacherService {
   constructor(
     private readonly teachersService: TeacherService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    @InjectRepository(Teacher)
+    private readonly teacherRepo: Repository<Teacher>,
+    private readonly mailService: MailService,
+
   ) {}
 
-  async generateTokens(teacher: Teacher) {
+  async generateTokens(payloadData: { id: string; role: string }) {
     const payload = {
-      id: teacher.id,
-      role: teacher.role,
+      id: payloadData.id,
+      role: payloadData.role,
     };
-
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         payload as any,
@@ -84,7 +93,8 @@ export class AuthTeacherService {
   }
 
   async refreshToken(teacherId: string, refresh_token: string, res: Response) {
-    const teacher = await this.teachersService.findOneWithRefreshToken(teacherId);
+    const teacher =
+      await this.teachersService.findOneWithRefreshToken(teacherId);
 
     if (!teacher || !teacher.data) {
       throw new ForbiddenException("Ruxsat etilmagan (Token topilmadi)");
@@ -138,5 +148,144 @@ export class AuthTeacherService {
     } catch (e) {
       throw new ForbiddenException("Token yaroqsiz yoki muddati o'tgan");
     }
+  }
+
+  async googleLogin(reqUser: any, res: Response) {
+    let teacher = await this.teachersService.findTeacherByEmail(reqUser.email);
+
+    if (!teacher) {
+      teacher = await this.teachersService.create({
+        email: reqUser.email,
+        fullName: `${reqUser.firstName} ${reqUser.lastName}`,
+        image: reqUser.picture,
+        isActive: true,
+        password: "",
+      });
+    }
+
+    const { accessToken, refreshToken } = await this.generateTokens(teacher);
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 7);
+    await this.teachersService.updateRefreshToken(
+      teacher.id,
+      hashedRefreshToken
+    );
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      maxAge: Number(process.env.COOKIE_TIME) || 15 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return {
+      message: "Tizimga xush kelibsiz",
+      accessToken,
+      teacherId: teacher.id,
+    };
+  }
+
+  async registerStep2(teacherId: string, dto: RegisterStep2Dto) {
+    const result = await this.teachersService.findOne(teacherId);
+    const teacher = result.data;
+    if (!teacher) {
+      throw new NotFoundException("O'qituvchi topilmadi");
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 7);
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
+
+    await this.teachersService.updateTeacher(teacherId, {
+      phoneNumber: dto.phone,
+      password: hashedPassword,
+      otpCode: otpCode,
+      otpExpires: otpExpires,
+    });
+
+    await this.mailService.sendMail(teacher.email, teacher.fullName, otpCode);
+    console.log(`SMS yuborildi: ${dto.phone} -> Kod: ${otpCode}`);
+
+    return {
+      success: true,
+      message: "Telefon raqami saqlandi va OTP kod yuborildi",
+      teacherId: teacher.id,
+    };
+  }
+
+  async validateGoogleUser(googleUser: any) {
+    let teacher = await this.teachersService.findTeacherByEmail(
+      googleUser.email
+    );
+
+    if (!teacher) {
+      teacher = await this.teachersService.create({
+        email: googleUser.email,
+        fullName: googleUser.fullName,
+        image: googleUser.image,
+        isActive: false,
+      });
+    }
+
+    return teacher;
+  }
+
+  async registerStep3(dto: RegisterStep3Dto) {
+    const teacher = await this.teacherRepo
+      .createQueryBuilder("teacher")
+      .where("teacher.id = :id", { id: dto.teacherId })
+      .addSelect("teacher.otpCode")
+      .addSelect("teacher.otpExpires")
+      .getOne();
+
+    if (!teacher) {
+      throw new NotFoundException("O'qituvchi topilmadi");
+    }
+
+    if (teacher.otpCode !== dto.otpCode) {
+      throw new BadRequestException("Tasdiqlash kodi noto'g'ri");
+    }
+
+    if (new Date() > teacher.otpExpires) {
+      throw new BadRequestException(
+        "Kodning muddati tugagan, qaytadan yuboring"
+      );
+    }
+
+    await this.teachersService.updateTeacher(teacher.id, {
+      isActive: true,
+      otpCode: null,
+      otpExpires: null,
+    });
+
+    const tokens = await this.getTokens(teacher.id, teacher.email);
+
+    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 7);
+
+    await this.teachersService.updateTeacher(teacher.id, {
+      refreshToken: hashedRefreshToken,
+    });
+
+    return {
+      success: true,
+      message: "Tabriklaymiz, profilingiz muvaffaqiyatli faollashtirildi!",
+      ...tokens,
+    };
+  }
+
+  async getTokens(teacherId: string, email: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        { sub: teacherId, email },
+        { secret: process.env.ACCESS_TOKEN_KEY, expiresIn: "15m" }
+      ),
+      this.jwtService.signAsync(
+        { sub: teacherId, email },
+        { secret: process.env.REFRESH_TOKEN_KEY, expiresIn: "7d" }
+      ),
+    ]);
+
+    return { accessToken, refreshToken };
   }
 }

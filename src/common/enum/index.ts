@@ -4,7 +4,7 @@ export enum RolesEnum {
 }
 
 export enum TeacherRole {
-  TEACHER = 'teacher',
+  TEACHER = 'TEACHER',
   ADMIN = 'ADMIN',
 }
 

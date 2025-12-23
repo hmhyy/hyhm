@@ -17,7 +17,7 @@ export class Teacher {
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: true })
+  @Column({ select: true, nullable: true })
   password: string;
 
   @Column({ nullable: true, select: false })
@@ -25,6 +25,9 @@ export class Teacher {
 
   @Column({ nullable: true })
   fullName: string;
+
+  @Column({ nullable: true })
+  image: string;
 
   @Column({ name: "phone_number", nullable: true })
   phoneNumber: string;
@@ -88,4 +91,10 @@ export class Teacher {
 
   @OneToMany("TeacherPayment", (payment: any) => payment.teacher)
   payments: any[];
+
+  @Column({ nullable: true, select: false })
+  otpCode: string;
+
+  @Column({ type: "timestamp", nullable: true, select: false })
+  otpExpires: Date;
 }

@@ -18,6 +18,11 @@ export class TeacherService {
     private readonly teacherRepo: Repository<Teacher>
   ) {}
 
+  async create(data: Partial<Teacher>): Promise<Teacher> {
+    const newTeacher = this.teacherRepo.create(data);
+    return await this.teacherRepo.save(newTeacher);
+  }
+
   async findAllTeachers() {
     const teachers = await this.teacherRepo.find({
       where: { isDelete: false },
@@ -134,21 +139,39 @@ export class TeacherService {
     return successRes({ message: "Teacher permanently deleted" });
   }
 
-    async findTeacherByEmail(email: string) {
+  async findTeacherByEmail(email: string) {
     const teacher = await this.teacherRepo.findOneBy({
       email,
       isDelete: false,
     });
-    if (!teacher) {
-      throw new NotFoundException(`O'qituvchi ${email} topilmadi`);
-    }
     return teacher;
   }
 
-    async findOneWithRefreshToken(id: string) {
+  async findOneWithRefreshToken(id: string) {
     const teacher = await this.teacherRepo.findOne({
       where: { id },
-      select: ['id', 'email', 'password', 'refreshToken', 'role', 'fullName', 'phoneNumber', 'cardNumber', 'isActive', 'isDelete', 'specification', 'level', 'description', 'hourPrice', 'portfolioLink', 'imageUrl', 'rating', 'expirence', 'createdAt', 'updatedAt'],
+      select: [
+        "id",
+        "email",
+        "password",
+        "refreshToken",
+        "role",
+        "fullName",
+        "phoneNumber",
+        "cardNumber",
+        "isActive",
+        "isDelete",
+        "specification",
+        "level",
+        "description",
+        "hourPrice",
+        "portfolioLink",
+        "imageUrl",
+        "rating",
+        "expirence",
+        "createdAt",
+        "updatedAt",
+      ],
     });
     if (!teacher) {
       throw new NotFoundException("Teacher not found");
@@ -156,13 +179,11 @@ export class TeacherService {
     return successRes(teacher);
   }
 
-    async updateRefreshToken(id: string, hashedToken: string | null) {
+  async updateRefreshToken(id: string, hashedToken: string | null) {
     return await this.teacherRepo.update(id, {
       refreshToken: hashedToken ?? undefined,
     });
   }
-
-
 
   // async getGoogleCalendarStatus(id: string) {
   //   const teacher = await this.teacherRepo.findOne({

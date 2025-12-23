@@ -15,30 +15,30 @@ export class JwtAuthGuard implements CanActivate {
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest();
+
+    let token: string | undefined;
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    if (authHeader && authHeader.split(" ")[0] === "Bearer") {
+      token = authHeader.split(" ")[1];
+    } else if (req.cookies && req.cookies.adminToken) {
+      token = req.cookies.adminToken;
+    }
+
+    if (!token) {
       throw new UnauthorizedException({
-        message: "Fuydalanuvchi authorizatsiya dan otmagan",
+        message: "Foydalanuvchi authorizatsiya dan otmagan",
       });
     }
 
-    const bearer = authHeader.split(" ")[0];
-    const token = authHeader.split(" ")[1];
-
-    if (bearer !== "Bearer" || !token) {
-      throw new UnauthorizedException({ message: "Bearer token aniqlanmadi" });
-    }
-
-    let user: any;
     try {
-      user = this.jwtService.verify(token, {secret: process.env.ACCESS_TOKEN_KEY});
-      console.log(user);
+      const user = this.jwtService.verify(token, {
+        secret: process.env.ACCESS_TOKEN_KEY,
+      });
+      req.user = user;
+      return true;
     } catch (error) {
-      console.log(error);
       throw new UnauthorizedException({ message: "Token notog'ri" });
     }
-    req.user = user;
-    return true;
   }
 }
