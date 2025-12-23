@@ -24,7 +24,7 @@ async function start() {
           scheme: "bearer",
           bearerFormat: "JWT",
           name: "JWT",
-          description: "Tokenni kiriting",
+          description: "Enter JWT token",
           in: "header",
         },
         "access-token"
