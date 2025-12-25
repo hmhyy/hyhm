@@ -35,8 +35,10 @@ export class LessonService {
       throw new BadRequestException("Iltimos, to'g'ri sanani kiriting");
     }
 
-    if (start <= now) {
-      throw new BadRequestException("Dars boshlanish vaqti hozirgi vaqtdan keyin bo'lishi kerak");
+    const minStartTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+
+    if (start < minStartTime) {
+      throw new BadRequestException("Dars kamida 30 daqiqa oldin yaratilishi kerak");
     }
 
     if (end <= start) {
