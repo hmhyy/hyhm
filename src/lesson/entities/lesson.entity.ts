@@ -30,7 +30,7 @@ export class Lesson {
   @Column({ nullable: true })
   googleMeetsUrl: string;
 
-  @Column({ type: "enum", enum: LessonStatus, default: LessonStatus.SCHEDULED })
+  @Column({ type: "enum", enum: LessonStatus, default: LessonStatus.AVAILABLE })
   status: LessonStatus;
 
   @Column({ nullable: true })

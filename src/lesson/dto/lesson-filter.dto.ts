@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsUUID,
 } from "class-validator";
-import { LessonStatus } from "./update-lesson.dto";
+import { LessonStatus } from "src/common/enum";
 
 export class LessonFilterDto {
   @ApiPropertyOptional({ description: "Filter by teacher id" })

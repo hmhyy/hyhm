@@ -1,18 +1,20 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { MoreThanOrEqual, Not, IsNull, Repository } from "typeorm";
+import { Not, IsNull, Repository } from "typeorm";
 import { CreateLessonDto } from "./dto/create-lesson.dto";
-import { LessonStatus, UpdateLessonDto } from "./dto/update-lesson.dto";
+import { UpdateLessonDto } from "./dto/update-lesson.dto";
 import { Lesson } from "./entities/lesson.entity";
 import { LessonFilterDto } from "./dto/lesson-filter.dto";
 import { DateRangeQueryDto } from "./dto/date-range-query.dto";
 import { BookLessonDto } from "./dto/book-lesson.dto";
 import { RateLessonDto } from "./dto/rate-lesson.dto";
 import { LessonHistory } from "../lessonHistory/entities/lessonHistory.entity";
+import { LessonStatus } from "src/common/enum";
 
 @Injectable()
 export class LessonService {
@@ -24,7 +26,53 @@ export class LessonService {
   ) {}
 
   async create(createLessonDto: CreateLessonDto) {
-    const newLesson = this.lessonRepository.create(createLessonDto);
+    const start = new Date(createLessonDto.startTime);
+    const end = new Date(createLessonDto.endTime);
+    const now = new Date();
+
+    // Validate dates
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException("Iltimos, to'g'ri sanani kiriting");
+    }
+
+    if (start <= now) {
+      throw new BadRequestException("Dars boshlanish vaqti hozirgi vaqtdan keyin bo'lishi kerak");
+    }
+
+    if (end <= start) {
+      throw new BadRequestException("Dars tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak");
+    }
+
+    // Check for overlapping lessons for teacher
+    const teacherConflict = await this.lessonRepository
+      .createQueryBuilder('lesson')
+      .where('lesson.teacherId = :teacherId', { teacherId: createLessonDto.teacherId })
+      .andWhere('lesson.startTime < :end', { end: end.toISOString() })
+      .andWhere('lesson.endTime > :start', { start: start.toISOString() })
+      .getOne();
+
+    if (teacherConflict) {
+      throw new BadRequestException("O'qituvchida bu vaqt oralig'ida boshqa dars mavjud");
+    }
+
+    // Check for overlapping lessons for student
+    const studentConflict = await this.lessonRepository
+      .createQueryBuilder('lesson')
+      .where('lesson.studentId = :studentId', { studentId: createLessonDto.studentId })
+      .andWhere('lesson.startTime < :end', { end: end.toISOString() })
+      .andWhere('lesson.endTime > :start', { start: start.toISOString() })
+      .getOne();
+
+    if (studentConflict) {
+      throw new BadRequestException("Talabada bu vaqt oralig'ida boshqa dars mavjud");
+    }
+
+    const newLesson = this.lessonRepository.create({
+      ...createLessonDto,
+      startTime: start,
+      endTime: end,
+    });
+
     return await this.lessonRepository.save(newLesson);
   }
 
@@ -121,7 +169,9 @@ export class LessonService {
   async completeLesson(id: string, teacherId?: string) {
     const lesson = await this.findOne(id);
     if (teacherId && lesson.teacherId !== teacherId) {
-      throw new ForbiddenException("Siz faqat o'z darslaringizni yakunlay olasiz");
+      throw new ForbiddenException(
+        "Siz faqat o'z darslaringizni yakunlay olasiz"
+      );
     }
 
     lesson.status = LessonStatus.COMPLETED;
