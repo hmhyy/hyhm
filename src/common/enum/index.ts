@@ -1,7 +1,7 @@
 export enum RolesEnum {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
-  STUDENT = "STUDENT",
+  STUDENT = "student",
 }
 
 export enum TeacherRole {
