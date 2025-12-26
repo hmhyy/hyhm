@@ -12,6 +12,7 @@ import { CookieGetter } from "../../common/decorators/cookie-getter.decorator";
 import { ApiOperation, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
 import { SignInDtoAdmin } from "../dto/sign-in-admin.dto";
 import { AuthAdminService } from "./auth-admin.service";
+import { successRes } from "../../common/response/succesResponse"; 
 
 @ApiTags("Admin Auth")
 @Controller("auth/admin")
@@ -31,7 +32,8 @@ export class AuthAdminController {
     @Body() signInDto: SignInDtoAdmin,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.signIn(signInDto, res);
+    const result = await this.authService.signIn(signInDto, res);
+    return successRes(result, 200);
   }
 
   @ApiOperation({ summary: "Admin tokenini yangilash (Refresh Token)" })
@@ -47,12 +49,13 @@ export class AuthAdminController {
   })
   @HttpCode(HttpStatus.OK)
   @Post(":id/refresh")
-  refresh(
+  async refresh(
     @Param("id") id: string,
     @CookieGetter("refresh_token") refreshToken: string,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.refreshToken(id, refreshToken, res);
+    const result = await this.authService.refreshToken(id, refreshToken, res);
+    return successRes(result);
   }
 
   @ApiOperation({ summary: "Admin tizimdan chiqishi (Logout)" })
@@ -62,10 +65,11 @@ export class AuthAdminController {
   })
   @HttpCode(HttpStatus.OK)
   @Post("logout")
-  signout(
+  async signout(
     @CookieGetter("refresh_token") refreshToken: string,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.signOut(refreshToken, res);
+    const result = await this.authService.signOut(refreshToken, res);
+    return successRes(result);
   }
 }

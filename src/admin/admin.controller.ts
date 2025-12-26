@@ -22,6 +22,7 @@ import { AdminService } from "./admin.service";
 import { Roles } from "../common/decorators/roles.decorator";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { RolesEnum } from "src/common/enum";
+import { successRes } from "../common/response/succesResponse";
 
 @ApiTags("Admin")
 @ApiBearerAuth("access-token")
@@ -32,43 +33,68 @@ export class AdminController {
 
   @Get("me")
   @ApiOperation({ summary: "Get current admin profile" })
+  @ApiResponse({ status: 200, description: "Profil muvaffaqiyatli olindi" })
   getProfile(@Request() req) {
-    return this.adminsService.getProfile(req.user.id);
+    const profile = this.adminsService.getProfile(req.user.id);
+    return successRes(profile);
   }
 
   @Patch("me")
   @ApiOperation({ summary: "Update own profile" })
+  @ApiResponse({ status: 200, description: "Profil muvaffaqiyatli yangilandi" })
   updateProfile(@Request() req, @Body() updateDto: UpdateAdminDto) {
-    return this.adminsService.updateProfile(req.user.id, updateDto);
+    const updated = this.adminsService.updateProfile(req.user.id, updateDto);
+    return successRes(updated);
   }
 
   @Roles(RolesEnum.SUPER_ADMIN)
   @Post()
+  @ApiOperation({ summary: "Create new admin (only super admin)" })
+  @ApiResponse({
+    status: 201,
+    description: "Yangi admin muvaffaqiyatli yaratildi",
+  })
   create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminsService.create(createAdminDto);
+    const newAdmin = this.adminsService.create(createAdminDto);
+    return successRes(newAdmin, 201);
   }
 
   @Roles(RolesEnum.SUPER_ADMIN, RolesEnum.ADMIN)
   @Get()
+  @ApiOperation({ summary: "Get all admins" })
+  @ApiResponse({
+    status: 200,
+    description: "Adminlar ro'yxati muvaffaqiyatli olindi",
+  })
   findAll() {
-    return this.adminsService.findAll();
+    const admins = this.adminsService.findAll();
+    return successRes(admins);
   }
 
   @Roles(RolesEnum.SUPER_ADMIN, RolesEnum.ADMIN)
   @Get(":id")
+  @ApiOperation({ summary: "Get admin by ID" })
+  @ApiResponse({ status: 200, description: "Admin muvaffaqiyatli topildi" })
   findOne(@Param("id") id: string) {
-    return this.adminsService.findOne(id);
+    const admin = this.adminsService.findOne(id);
+    return successRes(admin);
   }
 
   @Roles(RolesEnum.SUPER_ADMIN)
   @Patch(":id")
+  @ApiOperation({ summary: "Update admin by ID (only super admin)" })
+  @ApiResponse({ status: 200, description: "Admin muvaffaqiyatli yangilandi" })
   update(@Param("id") id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminsService.update(id, updateAdminDto);
+    const updated = this.adminsService.update(id, updateAdminDto);
+    return successRes(updated);
   }
 
   @Roles(RolesEnum.SUPER_ADMIN)
   @Delete(":id")
+  @ApiOperation({ summary: "Delete admin by ID (only super admin)" })
+  @ApiResponse({ status: 200, description: "Admin muvaffaqiyatli o'chirildi" })
   remove(@Param("id") id: string) {
-    return this.adminsService.remove(id);
+    const result = this.adminsService.remove(id);
+    return successRes(result);
   }
 }

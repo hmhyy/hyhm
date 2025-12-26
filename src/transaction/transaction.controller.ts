@@ -16,6 +16,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("transactions")
 @Controller("transactions")
@@ -26,38 +27,56 @@ export class TransactionController {
   @Post()
   @Roles("admin", "student")
   @ApiOperation({ summary: "Yangi tranzaksiya yaratish" })
-  create(@Body() createDto: CreateTransactionDto) {
-    return this.transactionService.create(createDto);
+  @ApiResponse({
+    status: 201,
+    description: "Tranzaksiya muvaffaqiyatli yaratildi",
+  })
+  @ApiResponse({ status: 400, description: "Yaroqsiz ma'lumotlar" })
+  async create(@Body() createDto: CreateTransactionDto) {
+    const result = await this.transactionService.create(createDto);
+    return successRes(result, 201);
   }
 
   @Get()
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Barcha tranzaksiyalarni olish" })
-  findAll() {
-    return this.transactionService.findAll();
+  @ApiResponse({ status: 200, description: "Barcha tranzaksiyalar ro'yxati" })
+  async findAll() {
+    const result = await this.transactionService.findAll();
+    return successRes(result);
   }
 
   @Get(":id")
   @Roles("admin", "student")
   @ApiOperation({ summary: "ID bo'yicha tranzaksiyani olish" })
-  findOne(@Param("id") id: string) {
-    return this.transactionService.findOne(id);
+  @ApiResponse({ status: 200, description: "Tranzaksiya topildi" })
+  @ApiResponse({ status: 404, description: "Tranzaksiya topilmadi" })
+  async findOne(@Param("id") id: string) {
+    const result = await this.transactionService.findOne(id);
+    return successRes(result);
   }
 
   @Patch(":id")
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Tranzaksiyani yangilash" })
-  update(@Param("id") id: string, @Body() updateDto: UpdateTransactionDto) {
-    return this.transactionService.update(id, updateDto);
+  @ApiResponse({ status: 200, description: "Tranzaksiya yangilandi" })
+  async update(
+    @Param("id") id: string,
+    @Body() updateDto: UpdateTransactionDto
+  ) {
+    const result = await this.transactionService.update(id, updateDto);
+    return successRes(result);
   }
 
   @Delete(":id")
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Tranzaksiyani o'chirish" })
-  remove(@Param("id") id: string) {
-    return this.transactionService.remove(id);
+  @ApiResponse({ status: 200, description: "Tranzaksiya o'chirildi" })
+  async remove(@Param("id") id: string) {
+    const result = await this.transactionService.remove(id);
+    return successRes(result);
   }
 }

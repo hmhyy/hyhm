@@ -22,6 +22,7 @@ import { BookLessonDto } from "./dto/book-lesson.dto";
 import { RateLessonDto } from "./dto/rate-lesson.dto";
 import { CurrentUser } from "../common/decorators/currentUser";
 import { IToken } from "../common/token/interface";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("lessons")
 @Controller("lessons")
@@ -33,94 +34,109 @@ export class LessonController {
   @Roles("ADMIN", "TEACHER")
   @ApiOperation({ summary: "Yangi dars yaratish" })
   @Post()
-  create(@Body() createLessonDto: CreateLessonDto) {
-    return this.lessonsService.create(createLessonDto);
+  async create(@Body() createLessonDto: CreateLessonDto) {
+    const result = await this.lessonsService.create(createLessonDto);
+    return successRes(result, 201);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Barcha darslar ro'yxatini olish (Admin uchun)" })
   @Get()
-  findAll() {
-    return this.lessonsService.findAll();
+  async findAll() {
+    const result = await this.lessonsService.findAll();
+    return successRes(result);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Get all lessons with filters (Admin only)" })
   @Get("admin/all")
-  findAllAdmin(@Query() filters: LessonFilterDto) {
-    return this.lessonsService.findAllAdmin(filters);
+  async findAllAdmin(@Query() filters: LessonFilterDto) {
+    const result = await this.lessonsService.findAllAdmin(filters);
+    return successRes(result);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Get teacher lessons (Admin only)" })
   @Get("admin/teacher/:teacherId")
-  findByTeacherAdmin(
+  async findByTeacherAdmin(
     @Param("teacherId") teacherId: string,
     @Query() filters: LessonFilterDto
   ) {
-    return this.lessonsService.findByTeacherAdmin(teacherId, filters);
+    const result = await this.lessonsService.findByTeacherAdmin(
+      teacherId,
+      filters
+    );
+    return successRes(result);
   }
 
   @Roles("teacher")
   @ApiOperation({ summary: "Get my lessons (Teacher only)" })
   @Get("teacher/my")
-  findMyLessons(@CurrentUser() user: IToken) {
-    return this.lessonsService.findMyLessons(user.id);
+  async findMyLessons(@CurrentUser() user: IToken) {
+    const result = await this.lessonsService.findMyLessons(user.id);
+    return successRes(result);
   }
 
   @Roles("teacher")
   @ApiOperation({ summary: "Get my booked lessons (Teacher only)" })
   @Get("teacher/my/booked")
-  findMyBookedLessons(@CurrentUser() user: IToken) {
-    return this.lessonsService.findMyBookedLessons(user.id);
+  async findMyBookedLessons(@CurrentUser() user: IToken) {
+    const result = await this.lessonsService.findMyBookedLessons(user.id);
+    return successRes(result);
   }
 
   @Roles("teacher")
   @ApiOperation({ summary: "Get my lessons by date range (for week calendar)" })
   @Get("teacher/my/by-date-range")
-  findMyLessonsByDateRange(
+  async findMyLessonsByDateRange(
     @CurrentUser() user: IToken,
     @Query() range: DateRangeQueryDto
   ) {
-    return this.lessonsService.findMyByDateRange(user.id, range);
+    const result = await this.lessonsService.findMyByDateRange(user.id, range);
+    return successRes(result);
   }
 
   @Roles("admin", "teacher", "student")
   @ApiOperation({ summary: "ID bo'yicha dars ma'lumotlarini olish" })
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.lessonsService.findOne(id);
+  async findOne(@Param("id") id: string) {
+    const result = await this.lessonsService.findOne(id);
+    return successRes(result);
   }
 
   @Roles("admin", "teacher")
   @ApiOperation({ summary: "Dars ma'lumotlarini yangilash" })
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateLessonDto: UpdateLessonDto) {
-    return this.lessonsService.update(id, updateLessonDto);
+  async update(
+    @Param("id") id: string,
+    @Body() updateLessonDto: UpdateLessonDto
+  ) {
+    const result = await this.lessonsService.update(id, updateLessonDto);
+    return successRes(result);
   }
 
   @Roles("teacher")
   @ApiOperation({ summary: "Mark lesson as completed (Teacher only)" })
   @Patch(":id/complete")
-  complete(
-    @Param("id") id: string,
-    @CurrentUser() user: IToken
-  ) {
-    return this.lessonsService.completeLesson(id, user.id);
+  async complete(@Param("id") id: string, @CurrentUser() user: IToken) {
+    const result = await this.lessonsService.completeLesson(id, user.id);
+    return successRes(result);
   }
 
   @ApiOperation({
     summary: "Rate a completed lesson (Student via Telegram)",
   })
   @Post(":id/rate")
-  rateLesson(@Param("id") id: string, @Body() dto: RateLessonDto) {
-    return this.lessonsService.rateLesson(id, dto);
+  async rateLesson(@Param("id") id: string, @Body() dto: RateLessonDto) {
+    const result = await this.lessonsService.rateLesson(id, dto);
+    return successRes(result);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Darsni o'chirib tashlash" })
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.lessonsService.remove(id);
+  async remove(@Param("id") id: string) {
+    const result = await this.lessonsService.remove(id);
+    return successRes(result);
   }
 }

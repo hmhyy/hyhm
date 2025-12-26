@@ -18,7 +18,6 @@ import {
   ApiQuery,
   ApiParam,
   ApiBearerAuth,
-  ApiSecurity,
 } from "@nestjs/swagger";
 import { PaymentService } from "./payment.service";
 import { AdminTransactionFilterDto } from "./dto/admin-transaction.dto";
@@ -26,6 +25,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { PaymeTransactionError } from "../common/errors/payment.error";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("Payment")
 @ApiBearerAuth("access-token")
@@ -69,8 +69,6 @@ export class PaymentController {
     status: 200,
     description: "Muvaffaqiyatli javob yoki Payme xato formati",
   })
-  @Post("payme")
-  @HttpCode(HttpStatus.OK)
   async handlePaymeCallback(@Body() body: any) {
     try {
       this.logger.log("Payme so‘rovi keldi:", JSON.stringify(body));
@@ -102,7 +100,6 @@ export class PaymentController {
           id: body.id || null,
         };
       }
-      this.logger.log("Payme so‘rovi keldi:", JSON.stringify(body));
 
       const { method, params, id } = body;
 
@@ -189,7 +186,6 @@ export class PaymentController {
 
   /**
    * Frontend uchun to‘lov boshlash
-   * Payme to‘lov sahifasiga yo‘naltirish URL sini qaytaradi
    */
   @Get("initiate")
   @ApiOperation({
@@ -212,31 +208,20 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: "To‘lov URL muvaffaqiyatli qaytarildi",
-    schema: {
-      example: {
-        status_code: 200,
-        message: "Payment initiated",
-        data: {
-          paymentUrl: "https://checkout.payme.uz/...",
-          amount: 150000,
-          lessonId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        },
-      },
-    },
   })
-  @ApiResponse({ status: 400, description: "Dars mavjud emas yoki band" })
-  @ApiResponse({ status: 403, description: "Talaba bloklangan" })
-  @ApiResponse({ status: 404, description: "Dars yoki talaba topilmadi" })
   async initiatePayment(
     @Query("lessonId") lessonId: string,
     @Query("studentId") studentId: string
   ) {
-    return this.paymentService.initiatePayment(lessonId, studentId);
+    const result = await this.paymentService.initiatePayment(
+      lessonId,
+      studentId
+    );
+    return successRes(result);
   }
 
   /**
    * To‘lov holatini tekshirish
-   * Frontend polling orqali ishlatadi
    */
   @Get("status")
   @ApiOperation({
@@ -249,23 +234,16 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: "Holat muvaffaqiyatli qaytarildi",
-    schema: {
-      example: {
-        status_code: 200,
-        data: {
-          state: "PAID",
-          isPaid: true,
-          isCanceled: false,
-        },
-      },
-    },
   })
-  @ApiResponse({ status: 404, description: "Tranzaksiya topilmadi" })
   async checkPaymentStatus(
     @Query("lessonId") lessonId: string,
     @Query("studentId") studentId: string
   ) {
-    return this.paymentService.checkPaymentStatus(lessonId, studentId);
+    const result = await this.paymentService.checkPaymentStatus(
+      lessonId,
+      studentId
+    );
+    return successRes(result);
   }
 
   // ==================== ADMIN ENDPOINTS ====================
@@ -277,41 +255,13 @@ export class PaymentController {
     summary: "Admin: Barcha tranzaksiyalarni olish",
     description: "Filter, pagination va qidiruv bilan tranzaksiyalar ro‘yxati",
   })
-  @ApiQuery({ name: "page", type: Number, required: false, example: 1 })
-  @ApiQuery({ name: "limit", type: Number, required: false, example: 20 })
-  @ApiQuery({
-    name: "state", 
-    type: String,
-    required: false,
-    enum: ["ALL", "PENDING", "PAID", "PENDING_CANCELED", "PAID_CANCELED"],
-  })
-  @ApiQuery({
-    name: "provider",
-    type: String,
-    required: false,
-    enum: ["ALL", "PAYME", "CLICK"],
-  })
-  @ApiQuery({
-    name: "search",
-    type: String,
-    required: false,
-    description: "paymeId, telefon, ism bo‘yicha qidiruv",
-  })
-  @ApiQuery({
-    name: "startDate",
-    type: String,
-    format: "date",
-    required: false,
-  })
-  @ApiQuery({ name: "endDate", type: String, format: "date", required: false })
   @ApiResponse({
     status: 200,
     description: "Tranzaksiyalar ro‘yxati va statistika",
   })
-  @ApiResponse({ status: 401, description: "Autentifikatsiya talab qilinadi" })
-  @ApiResponse({ status: 403, description: "Ruxsat yo‘q (faqat admin)" })
   async getAdminTransactions(@Query() filters: AdminTransactionFilterDto) {
-    return this.paymentService.getAdminTransactions(filters);
+    const result = await this.paymentService.getAdminTransactions(filters);
+    return successRes(result);
   }
 
   @Get("admin/transactions/:id")
@@ -328,11 +278,10 @@ export class PaymentController {
     description: "Tranzaksiya ichki ID (UUID)",
   })
   @ApiResponse({ status: 200, description: "Tranzaksiya tafsilotlari" })
-  @ApiResponse({ status: 404, description: "Tranzaksiya topilmadi" })
-  @ApiResponse({ status: 401, description: "Autentifikatsiya talab qilinadi" })
-  @ApiResponse({ status: 403, description: "Ruxsat yo‘q" })
   async getAdminTransactionById(@Param("id") transactionId: string) {
-    return this.paymentService.getAdminTransactionById(transactionId);
+    const result =
+      await this.paymentService.getAdminTransactionById(transactionId);
+    return successRes(result);
   }
 
   @Get("admin/statistics")
@@ -361,12 +310,14 @@ export class PaymentController {
     status: 200,
     description: "Statistika muvaffaqiyatli qaytarildi",
   })
-  @ApiResponse({ status: 401, description: "Autentifikatsiya talab qilinadi" })
-  @ApiResponse({ status: 403, description: "Ruxsat yo‘q" })
   async getTransactionStatistics(
     @Query("startDate") startDate?: string,
     @Query("endDate") endDate?: string
   ) {
-    return this.paymentService.getTransactionStatistics(startDate, endDate);
+    const result = await this.paymentService.getTransactionStatistics(
+      startDate,
+      endDate
+    );
+    return successRes(result);
   }
 }

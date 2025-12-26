@@ -55,7 +55,7 @@ export class AdminService {
     const newAdmin = this.adminRepository.create({
       username,
       password: hashedPassword,
-      role: RolesEnum.ADMIN, // Faqat username/password keladi, role doim ADMIN bo'ladi
+      role: RolesEnum.ADMIN, 
     });
 
     return await this.adminRepository.save(newAdmin);

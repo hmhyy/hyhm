@@ -16,6 +16,7 @@ import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { NotificationService } from "./notification.service";
+import { successRes } from "../common/response/succesResponse"; 
 
 @ApiTags("notifications")
 @Controller("notifications")
@@ -23,45 +24,60 @@ import { NotificationService } from "./notification.service";
 export class NotificationController {
   constructor(private readonly notificationsService: NotificationService) {}
 
-  @Roles("admin") 
+  @Roles("admin")
   @ApiOperation({ summary: "Yangi xabarnoma yaratish" })
   @ApiResponse({
     status: 201,
     description: "Xabarnoma muvaffaqiyatli yaratildi",
   })
   @Post()
-  create(@Body() createNotificationDto: CreateNotificationDto) {
-    return this.notificationsService.create(createNotificationDto);
+  async create(@Body() createNotificationDto: CreateNotificationDto) {
+    const result = await this.notificationsService.create(
+      createNotificationDto
+    );
+    return successRes(result, 201);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Barcha xabarnomalarni ko'rish" })
+  @ApiResponse({ status: 200, description: "Barcha xabarnomalar ro'yxati" })
   @Get()
-  findAll() {
-    return this.notificationsService.findAll();
+  async findAll() {
+    const result = await this.notificationsService.findAll();
+    return successRes(result);
   }
 
-  @Roles("admin", "student") 
+  @Roles("admin", "student")
   @ApiOperation({ summary: "ID bo'yicha xabarnomani olish" })
+  @ApiResponse({ status: 200, description: "Xabarnoma topildi" })
+  @ApiResponse({ status: 404, description: "Xabarnoma topilmadi" })
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.notificationsService.findOne(id);
+  async findOne(@Param("id") id: string) {
+    const result = await this.notificationsService.findOne(id);
+    return successRes(result);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Xabarnomani yangilash" })
+  @ApiResponse({ status: 200, description: "Xabarnoma yangilandi" })
   @Patch(":id")
-  update(
+  async update(
     @Param("id") id: string,
     @Body() updateNotificationDto: UpdateNotificationDto
   ) {
-    return this.notificationsService.update(id, updateNotificationDto);
+    const result = await this.notificationsService.update(
+      id,
+      updateNotificationDto
+    );
+    return successRes(result);
   }
 
   @Roles("admin")
   @ApiOperation({ summary: "Xabarnomani o'chirish" })
+  @ApiResponse({ status: 200, description: "Xabarnoma o'chirildi" })
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.notificationsService.remove(id);
+  async remove(@Param("id") id: string) {
+    const result = await this.notificationsService.remove(id);
+    return successRes(result);
   }
 }

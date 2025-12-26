@@ -16,6 +16,7 @@ import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { LessonHistoryService } from "./lessonHistory.service";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("lesson-history")
 @Controller("lesson-history")
@@ -31,8 +32,9 @@ export class LessonHistoryController {
     description: "Dars tarixi muvaffaqiyatli yaratildi",
   })
   @ApiResponse({ status: 400, description: "Yaroqsiz ma'lumotlar" })
-  create(@Body() createDto: CreateLessonHistoryDto) {
-    return this.lessonHistoryService.create(createDto);
+  async create(@Body() createDto: CreateLessonHistoryDto) {
+    const result = await this.lessonHistoryService.create(createDto);
+    return successRes(result, 201);
   }
 
   @Get()
@@ -40,8 +42,9 @@ export class LessonHistoryController {
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Barcha darslar tarixini olish" })
   @ApiResponse({ status: 200, description: "Darslar tarixi ro'yxati" })
-  findAll() {
-    return this.lessonHistoryService.findAll();
+  async findAll() {
+    const result = await this.lessonHistoryService.findAll();
+    return successRes(result);
   }
 
   @Get(":id")
@@ -49,8 +52,9 @@ export class LessonHistoryController {
   @ApiOperation({ summary: "ID bo'yicha dars tarixini olish" })
   @ApiResponse({ status: 200, description: "Dars tarixi topildi" })
   @ApiResponse({ status: 404, description: "Dars tarixi topilmadi" })
-  findOne(@Param("id") id: string) {
-    return this.lessonHistoryService.findOne(id);
+  async findOne(@Param("id") id: string) {
+    const result = await this.lessonHistoryService.findOne(id);
+    return successRes(result);
   }
 
   @Patch(":id")
@@ -58,8 +62,12 @@ export class LessonHistoryController {
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Dars tarixini yangilash" })
   @ApiResponse({ status: 200, description: "Dars tarixi yangilandi" })
-  update(@Param("id") id: string, @Body() updateDto: UpdateLessonHistoryDto) {
-    return this.lessonHistoryService.update(id, updateDto);
+  async update(
+    @Param("id") id: string,
+    @Body() updateDto: UpdateLessonHistoryDto
+  ) {
+    const result = await this.lessonHistoryService.update(id, updateDto);
+    return successRes(result);
   }
 
   @Delete(":id")
@@ -67,7 +75,8 @@ export class LessonHistoryController {
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Dars tarixini o'chirish" })
   @ApiResponse({ status: 200, description: "Dars tarixi o'chirildi" })
-  remove(@Param("id") id: string) {
-    return this.lessonHistoryService.remove(id);
+  async remove(@Param("id") id: string) {
+    const result = await this.lessonHistoryService.remove(id);
+    return successRes(result);
   }
 }

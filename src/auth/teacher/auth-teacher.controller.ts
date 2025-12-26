@@ -14,7 +14,13 @@ import { AuthTeacherService } from "./auth-teacher.service";
 import { SignInDto } from "../dto/sign-in.dto";
 import { Response } from "express";
 import { CookieGetter } from "../../common/decorators/cookie-getter.decorator";
-import { ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBody } from "@nestjs/swagger";
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiParam,
+  ApiBody,
+} from "@nestjs/swagger";
 import { AuthGuard } from "@nestjs/passport";
 import * as passport from "passport";
 import { TimeUtils } from "../../common/utils/time.utils";
@@ -24,6 +30,7 @@ import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/currentUser";
 import { IToken } from "../../common/token/interface";
 import { ApiBearerAuth } from "@nestjs/swagger";
+import { successRes } from "../../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("Teacher Auth")
 @Controller("auth/teacher")
@@ -39,7 +46,8 @@ export class AuthTeacherController {
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.signIn(signInDto, res);
+    const result = await this.authService.signIn(signInDto, res);
+    return successRes(result);
   }
 
   @ApiOperation({ summary: "Tokenni yangilash (Refresh Token)" })
@@ -48,23 +56,25 @@ export class AuthTeacherController {
   @ApiResponse({ status: 403, description: "Refresh token xato" })
   @HttpCode(HttpStatus.OK)
   @Post(":id/refresh")
-  refresh(
+  async refresh(
     @Param("id") id: string,
     @CookieGetter("refresh_token") refreshToken: string,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.refreshToken(id, refreshToken, res);
+    const result = await this.authService.refreshToken(id, refreshToken, res);
+    return successRes(result);
   }
 
   @ApiOperation({ summary: "Tizimdan chiqish (Logout)" })
   @ApiResponse({ status: 200, description: "Muvaffaqiyatli chiqildi" })
   @HttpCode(HttpStatus.OK)
   @Post("logout")
-  signout(
+  async signout(
     @CookieGetter("refresh_token") refreshToken: string,
     @Res({ passthrough: true }) res: Response
   ) {
-    return this.authService.signOut(refreshToken, res);
+    const result = await this.authService.signOut(refreshToken, res);
+    return successRes(result);
   }
 
   @Get("google-calendar-status")
@@ -72,7 +82,8 @@ export class AuthTeacherController {
   // @ApiBearerAuth()
   @ApiOperation({ summary: "Check Google Calendar connection status" })
   async getGoogleCalendarStatus(@CurrentUser() user: IToken) {
-    return this.authService.checkGoogleCalendarStatus(user.id);
+    const result = await this.authService.checkGoogleCalendarStatus(user.id);
+    return successRes(result);
   }
 
   @Get("google/reconnect")
@@ -117,16 +128,10 @@ export class AuthTeacherController {
   @Get("google")
   @ApiOperation({ summary: "Google OAuth login" })
   googleLogin(@Req() req, @Res() res) {
-    // Custom authenticate with prompt=consent to force refresh token
     passport.authenticate(
       "google",
       {
-        scope: [
-          "email",
-          "profile",
-          // "https://www.googleapis.com/auth/calendar",
-          // "https://www.googleapis.com/auth/calendar.events",
-        ],
+        scope: ["email", "profile"],
         accessType: "offline",
         prompt: "consent",
       } as passport.AuthenticateOptions,
@@ -140,14 +145,13 @@ export class AuthTeacherController {
           return res.status(401).json({ error: "No user found", info });
         }
 
-        // Manually log in the user
         req.logIn(user, (loginErr) => {
           if (loginErr) {
             return res
               .status(500)
               .json({ error: "Login failed", details: loginErr });
           }
-          return res.redirect("/dashboard"); // yoki kerakli joyga yo'naltiring
+          return res.redirect("/dashboard");
         });
       }
     )(req, res);
@@ -160,14 +164,12 @@ export class AuthTeacherController {
   async googleCallback(@Req() req, @Res() res) {
     const { user, step } = req.user;
 
-    // Agar step 2 bo'lsa
     if (step == 2) {
       return res.redirect(
         `http://localhost:3030/auth/teacher/register/step2/${user.id}`
       );
     }
 
-    // Agar step 'completed' bo'lsa, tokenlarni yaratamiz va cookies ga saqlaymiz
     if (step === "completed") {
       const jwtTokens = await this.authService.generateTokens({
         id: user.id,
@@ -194,11 +196,9 @@ export class AuthTeacherController {
         path: "/",
       });
 
-      // Teacher dashboard'ga redirect
       return res.redirect(`http://localhost:3030/teacher/dashboard`);
     }
 
-    // Agar account inactive bo'lsa
     if (step === "inactive") {
       const jwtTokens = await this.authService.generateTokens({
         id: user.id,
@@ -230,16 +230,15 @@ export class AuthTeacherController {
       );
     }
 
-    // return res.redirect(
-    //   `http://localhost:3030/login/teacher?error=unknown_step`
-    // );
-    return res.status(200).json({
+    // Agar boshqa holat bo'lsa
+    const fallbackResult = {
       message: "Google login muvaffaqiyatli",
       step: step,
       userId: user.id,
       userEmail: user.email,
       instructions: "Endi /register/step2 endpointiga POST so'rovi yuboring",
-    });
+    };
+    return successRes(fallbackResult);
   }
 
   @ApiOperation({ summary: "Teacher registration step 2 - Phone and password" })
@@ -249,25 +248,24 @@ export class AuthTeacherController {
     @Param("teacherId") teacherId: string,
     @Body() registerStep2Dto: RegisterStep2Dto
   ) {
-    return this.authService.registerStep2(teacherId, registerStep2Dto);
+    const result = await this.authService.registerStep2(
+      teacherId,
+      registerStep2Dto
+    );
+    return successRes(result);
   }
 
   @Post("register/step3")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "3-qadam: OTP kodni tasdiqlash",
-    description: "Telefon orqali kelgan 6 xonali kodni tekshirish va akkauntni faollashtirish",
+    description:
+      "Telefon orqali kelgan 6 xonali kodni tekshirish va akkauntni faollashtirish",
   })
-  @ApiBody({ type: RegisterStep3Dto }) 
+  @ApiBody({ type: RegisterStep3Dto })
   @ApiResponse({
     status: 200,
     description: "Profil muvaffaqiyatli faollashtirildi",
-    schema: {
-      example: {
-        message: "Akkaunt faollashtirildi",
-        accessToken: "eyJhbGciOiJIUzI1Ni..."
-      }
-    }
   })
   @ApiResponse({
     status: 400,
@@ -278,6 +276,7 @@ export class AuthTeacherController {
     description: "Foydalanuvchi topilmadi",
   })
   async registerStep3(@Body() dto: RegisterStep3Dto) {
-    return await this.authService.registerStep3(dto);
+    const result = await this.authService.registerStep3(dto);
+    return successRes(result);
   }
 }

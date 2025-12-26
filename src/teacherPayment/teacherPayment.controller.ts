@@ -16,6 +16,7 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("teacher-payments")
 @Controller("teacher-payments")
@@ -31,38 +32,51 @@ export class TeacherPaymentController {
     status: 201,
     description: "To'lov muvaffaqiyatli amalga oshirildi",
   })
-  create(@Body() createDto: CreateTeacherPaymentDto) {
-    return this.teacherPaymentService.create(createDto);
+  async create(@Body() createDto: CreateTeacherPaymentDto) {
+    const result = await this.teacherPaymentService.create(createDto);
+    return successRes(result, 201);
   }
 
   @Get()
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "Barcha to'lovlar ro'yxatini olish" })
-  findAll() {
-    return this.teacherPaymentService.findAll();
+  @ApiResponse({ status: 200, description: "Barcha to'lovlar ro'yxati" })
+  async findAll() {
+    const result = await this.teacherPaymentService.findAll();
+    return successRes(result);
   }
 
   @Get(":id")
   @Roles("admin", "teacher")
   @ApiOperation({ summary: "ID bo'yicha to'lov ma'lumotini olish" })
-  findOne(@Param("id") id: string) {
-    return this.teacherPaymentService.findOne(+id);
+  @ApiResponse({ status: 200, description: "To'lov ma'lumoti topildi" })
+  @ApiResponse({ status: 404, description: "To'lov topilmadi" })
+  async findOne(@Param("id") id: string) {
+    const result = await this.teacherPaymentService.findOne(+id);
+    return successRes(result);
   }
 
   @Patch(":id")
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "To'lov ma'lumotini yangilash yoki bekor qilish" })
-  update(@Param("id") id: string, @Body() updateDto: UpdateTeacherPaymentDto) {
-    return this.teacherPaymentService.update(+id, updateDto);
+  @ApiResponse({ status: 200, description: "To'lov yangilandi" })
+  async update(
+    @Param("id") id: string,
+    @Body() updateDto: UpdateTeacherPaymentDto
+  ) {
+    const result = await this.teacherPaymentService.update(+id, updateDto);
+    return successRes(result);
   }
 
   @Delete(":id")
   @Roles("admin")
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: "To'lovni o'chirish" })
-  remove(@Param("id") id: string) {
-    return this.teacherPaymentService.remove(+id);
+  @ApiResponse({ status: 200, description: "To'lov o'chirildi" })
+  async remove(@Param("id") id: string) {
+    const result = await this.teacherPaymentService.remove(+id);
+    return successRes(result);
   }
 }

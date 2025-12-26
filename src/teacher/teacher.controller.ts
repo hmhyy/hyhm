@@ -8,207 +8,252 @@ import {
   Delete,
   UseGuards,
   ParseUUIDPipe,
-} from '@nestjs/common';
-import { TeacherService } from './teacher.service';
-import { UpdateTeacherDto } from './dto/update-teacher.dto';
+} from "@nestjs/common";
+import { TeacherService } from "./teacher.service";
+import { UpdateTeacherDto } from "./dto/update-teacher.dto";
 import {
   ApiOperation,
   ApiResponse,
   ApiBody,
   ApiBearerAuth,
   ApiTags,
-} from '@nestjs/swagger';
-import { RolesEnum, TeacherRole } from 'src/common/enum';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { CurrentUser } from 'src/common/decorators/currentUser';
-import { UpdateRatingDto } from './dto/updateRating.dto';
-import { UpdateTeacherMeDto } from './dto/updateTeacherMe.dto';
-import { IToken } from 'src/common/token/interface';
+} from "@nestjs/swagger";
+import { RolesEnum, TeacherRole } from "src/common/enum";
+import { Roles } from "src/common/decorators/roles.decorator";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
+import { RolesGuard } from "src/common/guards/roles.guard";
+import { CurrentUser } from "src/common/decorators/currentUser";
+import { UpdateRatingDto } from "./dto/updateRating.dto";
+import { UpdateTeacherMeDto } from "./dto/updateTeacherMe.dto";
+import { IToken } from "src/common/token/interface";
+import { successRes } from "src/common/response/succesResponse"; 
 
-@ApiTags('Teacher')
-@Controller('teacher')
-// @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags("Teacher")
+@Controller("teacher")
 export class TeacherController {
   constructor(private readonly teacherService: TeacherService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all teachers with full details' })
+  @ApiOperation({ summary: "Get all teachers with full details" })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Get all teachers successfully',
+    description: "Get all teachers successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin access required",
+  })
   async findAll() {
-    return await this.teacherService.findAllTeachers();
+    const result = await this.teacherService.findAllTeachers();
+    return successRes(result);
   }
 
-  @Get('active')
-  @ApiOperation({ summary: 'Get only active teachers (for students)' })
-  @Roles('public')
+  @Get("active")
+  @ApiOperation({ summary: "Get only active teachers (for students)" })
+  @Roles("public")
   @ApiResponse({
     status: 200,
-    description: 'Get active teachers successfully',
+    description: "Get active teachers successfully",
   })
   async findActive() {
-    return await this.teacherService.findActiveTeachers();
+    const result = await this.teacherService.findActiveTeachers();
+    return successRes(result);
   }
 
-  @Get('deleted')
-  @ApiOperation({ summary: 'Get all deleted teachers' })
+  @Get("deleted")
+  @ApiOperation({ summary: "Get all deleted teachers" })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Get deleted teachers successfully',
+    description: "Get deleted teachers successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin access required",
+  })
   async findDeleted() {
-    return await this.teacherService.findDeletedTeachers();
+    const result = await this.teacherService.findDeletedTeachers();
+    return successRes(result);
   }
 
-  @Get('me')
-  @ApiOperation({ summary: 'Get current teacher profile' })
+  @Get("me")
+  @ApiOperation({ summary: "Get current teacher profile" })
   @Roles(TeacherRole.TEACHER, TeacherRole.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Get teacher profile successfully',
+    description: "Get teacher profile successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Teacher access required' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Teacher access required",
+  })
   async getProfile(@CurrentUser() user: IToken) {
-    return await this.teacherService.findTeacherProfile(user.id);
+    const result = await this.teacherService.findTeacherProfile(user.id);
+    return successRes(result);
   }
 
-  @Patch('me')
-  @ApiOperation({ summary: 'Update current teacher profile' })
+  @Patch("me")
+  @ApiOperation({ summary: "Update current teacher profile" })
   @Roles(TeacherRole.TEACHER, TeacherRole.ADMIN)
   @ApiBearerAuth()
   @ApiBody({ type: UpdateTeacherMeDto })
   @ApiResponse({
     status: 200,
-    description: 'Profile updated successfully',
+    description: "Profile updated successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Teacher access required' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Teacher access required",
+  })
   async updateProfile(
     @CurrentUser() user: IToken,
-    @Body() updateTeacherMeDto: UpdateTeacherMeDto,
+    @Body() updateTeacherMeDto: UpdateTeacherMeDto
   ) {
-    return await this.teacherService.updateTeacherProfile(user.id, updateTeacherMeDto);
+    const result = await this.teacherService.updateTeacherProfile(
+      user.id,
+      updateTeacherMeDto
+    );
+    return successRes(result);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get teacher by ID' })
-  @Roles('public')
+  @Get(":id")
+  @ApiOperation({ summary: "Get teacher by ID" })
+  @Roles("public")
   @ApiResponse({
     status: 200,
-    description: 'Get teacher successfully',
+    description: "Get teacher successfully",
   })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.teacherService.findOne(id);
+  @ApiResponse({ status: 404, description: "Teacher not found" })
+  async findOne(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.teacherService.findOne(id);
+    return successRes(result);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update teacher (Admin, Teacher only)' })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
+  @Patch(":id")
+  @ApiOperation({ summary: "Update teacher (Admin, Teacher only)" })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
   @ApiBearerAuth()
   @ApiBody({ type: UpdateTeacherDto })
   @ApiResponse({
     status: 200,
-    description: 'Teacher updated successfully',
+    description: "Teacher updated successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin or Teacher access required' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin or Teacher access required",
+  })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateTeacherDto: UpdateTeacherDto,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() updateTeacherDto: UpdateTeacherDto
   ) {
-    return await this.teacherService.updateTeacher(id, updateTeacherDto);
+    const result = await this.teacherService.updateTeacher(
+      id,
+      updateTeacherDto
+    );
+    return successRes(result);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Soft delete teacher' })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
+  @Delete(":id")
+  @ApiOperation({ summary: "Soft delete teacher" })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Teacher soft deleted successfully',
+    description: "Teacher soft deleted successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin or Teacher access required' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.teacherService.softDeleteTeacher(id);
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin or Teacher access required",
+  })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
+  async remove(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.teacherService.softDeleteTeacher(id);
+    return successRes(result);
   }
 
-  @Patch(':id/activate')
-  @ApiOperation({ summary: 'Activate/deactivate teacher for students' })
+  @Patch(":id/activate")
+  @ApiOperation({ summary: "Activate/deactivate teacher for students" })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Teacher activation status updated successfully',
+    description: "Teacher activation status updated successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
-  async activate(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.teacherService.activateTeacher(id);
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin access required",
+  })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
+  async activate(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.teacherService.activateTeacher(id);
+    return successRes(result);
   }
 
-  @Patch(':id/rating')
-  @ApiOperation({ summary: 'Update teacher rating (Authenticated users)' })
+  @Patch(":id/rating")
+  @ApiOperation({ summary: "Update teacher rating (Authenticated users)" })
   @ApiBearerAuth()
   @ApiBody({ type: UpdateRatingDto })
   @ApiResponse({
     status: 200,
-    description: 'Teacher rating updated successfully',
+    description: "Teacher rating updated successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
   async updateRating(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateRatingDto: UpdateRatingDto,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() updateRatingDto: UpdateRatingDto
   ) {
-    return await this.teacherService.updateRating(id, updateRatingDto);
+    const result = await this.teacherService.updateRating(id, updateRatingDto);
+    return successRes(result);
   }
 
-  @Post(':id/restore')
-  @ApiOperation({ summary: 'Restore deleted teacher' })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
+  @Post(":id/restore")
+  @ApiOperation({ summary: "Restore deleted teacher" })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Teacher restored successfully',
+    description: "Teacher restored successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin or Teacher access required' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
-  async restore(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.teacherService.restoreTeacher(id);
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin or Teacher access required",
+  })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
+  async restore(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.teacherService.restoreTeacher(id);
+    return successRes(result);
   }
 
-  @Delete(':id/hard')
-  @ApiOperation({ summary: 'Hard delete teacher - permanently delete' })
+  @Delete(":id/hard")
+  @ApiOperation({ summary: "Hard delete teacher - permanently delete" })
   @Roles(RolesEnum.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Teacher permanently deleted successfully',
+    description: "Teacher permanently deleted successfully",
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - SuperAdmin access required' })
-  @ApiResponse({ status: 404, description: 'Teacher not found' })
-  async hardDelete(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.teacherService.hardDeleteTeacher(id);
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - SuperAdmin access required",
+  })
+  @ApiResponse({ status: 404, description: "Teacher not found" })
+  async hardDelete(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.teacherService.hardDeleteTeacher(id);
+    return successRes(result);
   }
 }

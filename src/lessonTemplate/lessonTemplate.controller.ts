@@ -9,12 +9,19 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from "@nestjs/common";
-import { ApiOperation, ApiTags, ApiResponse, ApiParam, ApiBody } from "@nestjs/swagger";
+import {
+  ApiOperation,
+  ApiTags,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { AdminGuard } from "../common/guards/admin.guard";
 import { CreateLessonTemplateDto } from "./dto/create-lesson-template.dto";
 import { UpdateLessonTemplateDto } from "./dto/update-lesson-template.dto";
 import { LessonTemplateService } from "./lessonTemplate.service";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("lesson-template")
 @Controller("lesson-template")
@@ -25,51 +32,65 @@ export class LessonTemplateController {
   @ApiOperation({ summary: "Yangi dars shabloni qo'shish" })
   @ApiResponse({ status: 201, description: "Shablon muvaffaqiyatli yaratildi" })
   @Post()
-  create(@Body() createLessonTemplateDto: CreateLessonTemplateDto) {
-    return this.lessonTemplateService.create(createLessonTemplateDto);
+  async create(@Body() createLessonTemplateDto: CreateLessonTemplateDto) {
+    const result = await this.lessonTemplateService.create(
+      createLessonTemplateDto
+    );
+    return successRes(result, 201);
   }
 
   @ApiOperation({ summary: "Barcha dars shablonlarini olish" })
   @ApiResponse({ status: 200, description: "Shablonlar ro'yxati" })
   @Get()
-  findAll() {
-    return this.lessonTemplateService.findAll();
+  async findAll() {
+    const result = await this.lessonTemplateService.findAll();
+    return successRes(result);
   }
 
   @ApiOperation({ summary: "ID bo'yicha bitta dars shablonini olish" })
   @ApiResponse({ status: 200, description: "Shablon topildi" })
   @Get(":id")
-  findOne(@Param("id", ParseUUIDPipe) id: string) {
-    return this.lessonTemplateService.findOne(id);
+  async findOne(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.lessonTemplateService.findOne(id);
+    return successRes(result);
   }
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "ID bo'yicha shablonni yangilash" })
   @ApiResponse({ status: 200, description: "Shablon yangilandi" })
   @Patch(":id")
-  update(
-    @Param("id", ParseUUIDPipe) id: string, // UUID ekanligini tekshirish qo'shildi
+  async update(
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() updateLessonTemplateDto: UpdateLessonTemplateDto
   ) {
-    return this.lessonTemplateService.update(id, updateLessonTemplateDto);
+    const result = await this.lessonTemplateService.update(
+      id,
+      updateLessonTemplateDto
+    );
+    return successRes(result);
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: "ID bo'yicha shablonni o'chirish" })
   @ApiResponse({ status: 200, description: "Shablon o'chirildi" })
   @Delete(":id")
-  remove(@Param("id", ParseUUIDPipe) id: string) {
-    return this.lessonTemplateService.remove(id);
+  async remove(@Param("id", ParseUUIDPipe) id: string) {
+    const result = await this.lessonTemplateService.remove(id);
+    return successRes(result);
   }
 
   @Post("templates/:id/apply")
   @ApiOperation({ summary: "Shablonni qo'llash" })
   @ApiParam({ name: "id", type: String, description: "Template ID" })
   @ApiResponse({ status: 200, description: "Muvaffaqiyatli qo'llandi" })
-  applyTemplate(
+  async applyTemplate(
     @Param("id") id: string,
     @Body() createLessonTemplateDto: CreateLessonTemplateDto
   ) {
-    return this.lessonTemplateService.applyTemplate(id, createLessonTemplateDto);
+    const result = await this.lessonTemplateService.applyTemplate(
+      id,
+      createLessonTemplateDto
+    );
+    return successRes(result);
   }
 }

@@ -29,10 +29,10 @@ import { RolesEnum } from "src/common/enum";
 import { BlockStudentDto } from "./dto/blockStudent.dto";
 import { IToken } from "../common/token/interface";
 import { CurrentUser } from "../common/decorators/currentUser";
+import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("students")
 @ApiBearerAuth("access-token")
-// @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("students")
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
@@ -44,27 +44,26 @@ export class StudentsController {
   })
   @ApiResponse({ status: 400, description: "Yaroqsiz ma'lumotlar" })
   @Post()
-  create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentsService.create(createStudentDto);
+  async create(@Body() createStudentDto: CreateStudentDto) {
+    const result = await this.studentsService.create(createStudentDto);
+    return successRes(result, 201);
   }
 
-  // @UseGuards(JwtAuthGuard, AdminGuard)
-  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha talabalarni olish" })
   @ApiResponse({ status: 200, description: "Studentlar ro'yxati" })
   @Get()
   @ApiBearerAuth("access-token")
-  findAll() {
-    return this.studentsService.findAll();
+  async findAll() {
+    const result = await this.studentsService.findAll();
+    return successRes(result);
   }
 
-  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
-  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Students stats" })
   @ApiResponse({ status: 200, description: "Students stats" })
   @Get("stats")
-  stats() {
-    return this.studentsService.stats();
+  async stats() {
+    const result = await this.studentsService.stats();
+    return successRes(result);
   }
 
   @Get("me")
@@ -83,53 +82,54 @@ export class StudentsController {
       throw new NotFoundException("Student profile not found");
     }
 
-    return profile;
+    return successRes(profile);
   }
 
-  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
-  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Student block" })
   @ApiResponse({ status: 200, description: "Student blocked" })
   @Post("block/:id")
-  blockStudent(
+  async blockStudent(
     @Param("id") id: string,
     @Body() blockStudentDto: BlockStudentDto
   ) {
-    return this.studentsService.blockStudent(id, blockStudentDto);
+    const result = await this.studentsService.blockStudent(id, blockStudentDto);
+    return successRes(result);
   }
 
-  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
-  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Student unblock" })
   @ApiResponse({ status: 200, description: "Student unblocked" })
   @Post("unblock/:id")
-  unblockStudent(@Param("id") id: string) {
-    return this.studentsService.unblockStudent(id);
+  async unblockStudent(@Param("id") id: string) {
+    const result = await this.studentsService.unblockStudent(id);
+    return successRes(result);
   }
 
-  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
   @ApiOperation({ summary: "ID bo'yicha bitta talabani olish" })
   @ApiResponse({ status: 200, description: "Talaba topildi" })
   @ApiResponse({ status: 404, description: "Talaba topilmadi" })
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.studentsService.findOne(id);
+  async findOne(@Param("id") id: string) {
+    const result = await this.studentsService.findOne(id);
+    return successRes(result);
   }
 
-  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
   @ApiOperation({ summary: "ID bo'yicha talabani yangilash" })
   @ApiResponse({ status: 200, description: "Talaba yangilandi" })
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateStudentDto: UpdateStudentDto) {
-    return this.studentsService.update(id, updateStudentDto);
+  async update(
+    @Param("id") id: string,
+    @Body() updateStudentDto: UpdateStudentDto
+  ) {
+    const result = await this.studentsService.update(id, updateStudentDto);
+    return successRes(result);
   }
 
-  // @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: "ID bo'yicha talabani o'chirish" })
   @ApiResponse({ status: 200, description: "Talaba o'chirildi" })
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.studentsService.remove(id);
+  async remove(@Param("id") id: string) {
+    const result = await this.studentsService.remove(id);
+    return successRes(result);
   }
 
   @Get(":chatId/lessons")
@@ -140,7 +140,7 @@ export class StudentsController {
       throw new NotFoundException(`Bu talaba uchun darslar topilmadi.`);
     }
 
-    return lessons;
+    return successRes(lessons);
   }
 
   @Get(":chatId/history")
@@ -149,6 +149,6 @@ export class StudentsController {
   async getHistory(@Param("chatId") chatId: string) {
     const history = await this.studentsService.getLessonHistory(chatId);
     if (!history) throw new NotFoundException("Tarix topilmadi");
-    return history;
+    return successRes(history);
   }
 }

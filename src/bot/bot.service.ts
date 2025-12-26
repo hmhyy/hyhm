@@ -20,7 +20,6 @@ export class BotService {
 
     let student = await this.studentRepo.findOne({ where: { chatId } });
 
-    // 1. START buyrug'i
     if (text === "/start") {
       if (!student) {
         student = this.studentRepo.create({ chatId, step: "FIRST_NAME" });
@@ -35,7 +34,6 @@ export class BotService {
 
     if (!student) return;
 
-    // 2. REGISTRATSIYA BOSQICHLARI
     if (student.step !== "DONE") {
       switch (student.step) {
         case "FIRST_NAME":
@@ -65,7 +63,6 @@ export class BotService {
 
           if (!phone.startsWith("+")) phone = `+${phone}`;
 
-          // 1. Obyektni o'zini yangilash (Baza uchun)
           student.phoneNumber = phone;
 
           const updateData = {
@@ -74,15 +71,13 @@ export class BotService {
             phoneNumber: phone,
             tgId: student.chatId,
             tgUsername: ctx.from.username || "",
-            role: "student", // Agar baza xato bersa, buni kichik harf ekanini tekshiring
+            role: "student",
             isBlocked: false,
           };
 
           try {
-            // 2. Service orqali update qilish
             await this.studentsService.update(student.id, updateData);
 
-            // 3. Bot obyektidagi stepni DONE qilish va saqlash
             student.step = "DONE";
             await this.studentRepo.save(student);
 
