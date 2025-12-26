@@ -12,18 +12,20 @@ import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
 import { UpdateNotificationDto } from "./dto/update-notification.dto";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { NotificationService } from "./notification.service";
+import { RolesEnum, TeacherRole } from "../common/enum";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiTags("notifications")
+@ApiBearerAuth('access-token')
 @Controller("notifications")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class NotificationController {
-  constructor(private readonly notificationsService: NotificationService) {}
+  constructor(private readonly notificationsService: NotificationService) { }
 
-  @Roles("admin") 
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Yangi xabarnoma yaratish" })
   @ApiResponse({
     status: 201,
@@ -34,21 +36,21 @@ export class NotificationController {
     return this.notificationsService.create(createNotificationDto);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha xabarnomalarni ko'rish" })
   @Get()
   findAll() {
     return this.notificationsService.findAll();
   }
 
-  @Roles("admin", "student") 
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN, TeacherRole.ADMIN)
   @ApiOperation({ summary: "ID bo'yicha xabarnomani olish" })
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.notificationsService.findOne(id);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Xabarnomani yangilash" })
   @Patch(":id")
   update(
@@ -58,7 +60,7 @@ export class NotificationController {
     return this.notificationsService.update(id, updateNotificationDto);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Xabarnomani o'chirish" })
   @Delete(":id")
   remove(@Param("id") id: string) {

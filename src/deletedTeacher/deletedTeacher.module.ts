@@ -6,9 +6,9 @@ import { DeletedTeachersController } from "./deletedTeacher.controller";
 import { DeletedTeachersService } from "./deletedTeacher.service";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DeletedTeacher])],
+  imports: [TypeOrmModule.forFeature([DeletedTeacher]), JwtModule],
   controllers: [DeletedTeachersController],
   providers: [DeletedTeachersService],
   exports: [DeletedTeachersService],
 })
-export class DeletedTeacherModule {}
+export class DeletedTeacherModule { }

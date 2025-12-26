@@ -1,3 +1,4 @@
+
 import {
   CanActivate,
   ExecutionContext,
@@ -5,42 +6,35 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { Observable } from "rxjs";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
-  canActivate(
-    context: ExecutionContext
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const req = context.switchToHttp().getRequest();
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
 
     let token: string | undefined;
-    const authHeader = req.headers.authorization;
-    console.log(authHeader);
-    
 
-    if (authHeader && authHeader.split(" ")[0] === "Bearer") {
-      token = authHeader.split(" ")[1];
-    } else if (req.cookies && req.cookies.adminToken) {
-      token = req.cookies.adminToken;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
     }
 
     if (!token) {
-      throw new UnauthorizedException({
-        message: "Foydalanuvchi authorizatsiya dan otmagan",
-      });
+      throw new UnauthorizedException("Token topilmadi");
     }
 
     try {
-      const user = this.jwtService.verify(token, {
+      const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.ACCESS_TOKEN_KEY,
       });
-      req.user = user;
+
+      request.user = payload;
       return true;
     } catch (error) {
-      throw new UnauthorizedException({ message: "Token notog'ri" });
+      console.log("JWT Verify Error:", error.message);
+      throw new UnauthorizedException("Token yaroqsiz yoki muddati o'tgan");
     }
   }
 }

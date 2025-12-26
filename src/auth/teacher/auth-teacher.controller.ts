@@ -26,6 +26,7 @@ import { IToken } from "../../common/token/interface";
 import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiTags("Teacher Auth")
+@ApiBearerAuth("access-token")
 @Controller("auth/teacher")
 export class AuthTeacherController {
   constructor(private readonly authService: AuthTeacherService) {}
@@ -68,16 +69,16 @@ export class AuthTeacherController {
   }
 
   @Get("google-calendar-status")
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Check Google Calendar connection status" })
   async getGoogleCalendarStatus(@CurrentUser() user: IToken) {
     return this.authService.checkGoogleCalendarStatus(user.id);
   }
 
   @Get("google/reconnect")
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Reconnect Google Calendar (forces new consent)" })
   googleReconnect(@Req() req, @Res() res) {
     passport.authenticate(

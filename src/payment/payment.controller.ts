@@ -26,14 +26,15 @@ import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { PaymeTransactionError } from "../common/errors/payment.error";
+import { RolesEnum } from "src/common/enum";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 
 @ApiTags("Payment")
-@ApiBearerAuth("access-token")
 @Controller("payment")
 export class PaymentController {
   private readonly logger = new Logger(PaymentController.name);
 
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
   /**
    * Payme merchant API endpoint
@@ -271,8 +272,8 @@ export class PaymentController {
   // ==================== ADMIN ENDPOINTS ====================
 
   @Get("admin/transactions")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: Barcha tranzaksiyalarni olish",
     description: "Filter, pagination va qidiruv bilan tranzaksiyalar ro‘yxati",
@@ -280,7 +281,7 @@ export class PaymentController {
   @ApiQuery({ name: "page", type: Number, required: false, example: 1 })
   @ApiQuery({ name: "limit", type: Number, required: false, example: 20 })
   @ApiQuery({
-    name: "state", 
+    name: "state",
     type: String,
     required: false,
     enum: ["ALL", "PENDING", "PAID", "PENDING_CANCELED", "PAID_CANCELED"],
@@ -315,8 +316,8 @@ export class PaymentController {
   }
 
   @Get("admin/transactions/:id")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: Bitta tranzaksiya tafsilotlari",
     description:
@@ -336,8 +337,8 @@ export class PaymentController {
   }
 
   @Get("admin/statistics")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: To‘lov statistikasi",
     description:

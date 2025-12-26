@@ -10,21 +10,20 @@ import {
 } from "@nestjs/common";
 import { CreateLessonHistoryDto } from "./dto/create-lesson-history.dto";
 import { UpdateLessonHistoryDto } from "./dto/update-lesson-history.dto";
-import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
+import { RolesEnum, TeacherRole } from "../common/enum";
 import { LessonHistoryService } from "./lessonHistory.service";
 
 @ApiTags("lesson-history")
 @Controller("lesson-history")
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class LessonHistoryController {
-  constructor(private readonly lessonHistoryService: LessonHistoryService) {}
+  constructor(private readonly lessonHistoryService: LessonHistoryService) { }
 
   @Post()
-  @Roles("admin", "teacher")
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Dars tarixini yaratish" })
   @ApiResponse({
     status: 201,
@@ -36,8 +35,7 @@ export class LessonHistoryController {
   }
 
   @Get()
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha darslar tarixini olish" })
   @ApiResponse({ status: 200, description: "Darslar tarixi ro'yxati" })
   findAll() {
@@ -45,7 +43,7 @@ export class LessonHistoryController {
   }
 
   @Get(":id")
-  @Roles("admin", "teacher", "student")
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, RolesEnum.STUDENT, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "ID bo'yicha dars tarixini olish" })
   @ApiResponse({ status: 200, description: "Dars tarixi topildi" })
   @ApiResponse({ status: 404, description: "Dars tarixi topilmadi" })
@@ -54,8 +52,7 @@ export class LessonHistoryController {
   }
 
   @Patch(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Dars tarixini yangilash" })
   @ApiResponse({ status: 200, description: "Dars tarixi yangilandi" })
   update(@Param("id") id: string, @Body() updateDto: UpdateLessonHistoryDto) {
@@ -63,8 +60,7 @@ export class LessonHistoryController {
   }
 
   @Delete(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Dars tarixini o'chirish" })
   @ApiResponse({ status: 200, description: "Dars tarixi o'chirildi" })
   remove(@Param("id") id: string) {
