@@ -9,17 +9,21 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from "@nestjs/common";
-import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateDeletedTeacherDto } from "./dto/create-deleted-teacher.dto";
 import { UpdateDeletedTeacherDto } from "./dto/update-deleted-teacher.dto";
 import { DeletedTeachersService } from "./deletedTeacher.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
-import { successRes } from "../common/response/succesResponse"; 
+import { RolesGuard } from "../common/guards/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
+import { RolesEnum } from "../common/enum";
+import { successRes } from "../common/response/succesResponse";
 
 @ApiTags("deleted-teachers")
+@ApiBearerAuth("access-token") // Swaggerda "Authorize" tugmasi chiqishi uchun
+@Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN) // Faqat Admin va SuperAdmin kira oladi
 @Controller("deleted-teachers")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, RolesGuard) // Avval Token tekshiriladi, keyin Rol
 export class DeletedTeachersController {
   constructor(
     private readonly deletedTeachersService: DeletedTeachersService

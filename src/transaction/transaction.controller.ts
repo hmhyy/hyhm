@@ -13,19 +13,21 @@ import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
+import { RolesEnum } from "src/common/enum";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("transactions")
+@ApiBearerAuth('access-token')
 @Controller("transactions")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(private readonly transactionService: TransactionService) { }
 
   @Post()
-  @Roles("admin", "student")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Yangi tranzaksiya yaratish" })
   @ApiResponse({
     status: 201,
@@ -38,8 +40,7 @@ export class TransactionController {
   }
 
   @Get()
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha tranzaksiyalarni olish" })
   @ApiResponse({ status: 200, description: "Barcha tranzaksiyalar ro'yxati" })
   async findAll() {
@@ -48,7 +49,7 @@ export class TransactionController {
   }
 
   @Get(":id")
-  @Roles("admin", "student")
+  @Roles(RolesEnum.ADMIN, RolesEnum.STUDENT, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "ID bo'yicha tranzaksiyani olish" })
   @ApiResponse({ status: 200, description: "Tranzaksiya topildi" })
   @ApiResponse({ status: 404, description: "Tranzaksiya topilmadi" })
@@ -58,8 +59,7 @@ export class TransactionController {
   }
 
   @Patch(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Tranzaksiyani yangilash" })
   @ApiResponse({ status: 200, description: "Tranzaksiya yangilandi" })
   async update(
@@ -71,8 +71,7 @@ export class TransactionController {
   }
 
   @Delete(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Tranzaksiyani o'chirish" })
   @ApiResponse({ status: 200, description: "Tranzaksiya o'chirildi" })
   async remove(@Param("id") id: string) {

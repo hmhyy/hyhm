@@ -28,13 +28,14 @@ import { UpdateTeacherMeDto } from "./dto/updateTeacherMe.dto";
 import { IToken } from "src/common/token/interface";
 import { successRes } from "src/common/response/succesResponse"; 
 
-@ApiTags("Teacher")
-@Controller("teacher")
+@ApiTags('Teacher')
+@Controller('teacher')
+// @UseGuards(JwtAuthGuard, RolesGuard)
 export class TeacherController {
-  constructor(private readonly teacherService: TeacherService) {}
+  constructor(private readonly teacherService: TeacherService) { }
 
   @Get()
-  @ApiOperation({ summary: "Get all teachers with full details" })
+  @ApiOperation({ summary: 'Get all teachers with full details' })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
@@ -51,9 +52,9 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Get("active")
-  @ApiOperation({ summary: "Get only active teachers (for students)" })
-  @Roles("public")
+  @Get('active')
+  @ApiOperation({ summary: 'Get only active teachers (for students)' })
+  @Roles('public')
   @ApiResponse({
     status: 200,
     description: "Get active teachers successfully",
@@ -63,8 +64,8 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Get("deleted")
-  @ApiOperation({ summary: "Get all deleted teachers" })
+  @Get('deleted')
+  @ApiOperation({ summary: 'Get all deleted teachers' })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
@@ -81,8 +82,8 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Get("me")
-  @ApiOperation({ summary: "Get current teacher profile" })
+  @Get('me')
+  @ApiOperation({ summary: 'Get current teacher profile' })
   @Roles(TeacherRole.TEACHER, TeacherRole.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
@@ -99,8 +100,8 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Patch("me")
-  @ApiOperation({ summary: "Update current teacher profile" })
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current teacher profile' })
   @Roles(TeacherRole.TEACHER, TeacherRole.ADMIN)
   @ApiBearerAuth()
   @ApiBody({ type: UpdateTeacherMeDto })
@@ -124,9 +125,9 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Get teacher by ID" })
-  @Roles("public")
+  @Get(':id')
+  @ApiOperation({ summary: 'Get teacher by ID' })
+  @Roles('public')
   @ApiResponse({
     status: 200,
     description: "Get teacher successfully",
@@ -137,9 +138,9 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Patch(":id")
-  @ApiOperation({ summary: "Update teacher (Admin, Teacher only)" })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update teacher (Admin, Teacher only)' })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
   @ApiBearerAuth()
   @ApiBody({ type: UpdateTeacherDto })
   @ApiResponse({
@@ -163,9 +164,9 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Delete(":id")
-  @ApiOperation({ summary: "Soft delete teacher" })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
+  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete teacher' })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
@@ -182,8 +183,8 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Patch(":id/activate")
-  @ApiOperation({ summary: "Activate/deactivate teacher for students" })
+  @Patch(':id/activate')
+  @ApiOperation({ summary: 'Activate/deactivate teacher for students' })
   @Roles(RolesEnum.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
@@ -219,9 +220,9 @@ export class TeacherController {
     return successRes(result);
   }
 
-  @Post(":id/restore")
-  @ApiOperation({ summary: "Restore deleted teacher" })
-  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, "ID")
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Restore deleted teacher' })
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, TeacherRole.ADMIN, 'ID')
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,

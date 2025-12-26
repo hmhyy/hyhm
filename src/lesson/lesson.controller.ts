@@ -13,6 +13,7 @@ import { ApiOperation, ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
+import { RolesEnum, TeacherRole } from "../common/enum";
 import { LessonService } from "./lesson.service";
 import { UpdateLessonDto } from "./dto/update-lesson.dto";
 import { CreateLessonDto } from "./dto/create-lesson.dto";
@@ -29,9 +30,9 @@ import { successRes } from "../common/response/succesResponse"; // yo'lni o'zing
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth("access-token")
 export class LessonController {
-  constructor(private readonly lessonsService: LessonService) {}
+  constructor(private readonly lessonsService: LessonService) { }
 
-  @Roles("ADMIN", "TEACHER")
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Yangi dars yaratish" })
   @Post()
   async create(@Body() createLessonDto: CreateLessonDto) {
@@ -39,7 +40,7 @@ export class LessonController {
     return successRes(result, 201);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha darslar ro'yxatini olish (Admin uchun)" })
   @Get()
   async findAll() {
@@ -47,7 +48,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Get all lessons with filters (Admin only)" })
   @Get("admin/all")
   async findAllAdmin(@Query() filters: LessonFilterDto) {
@@ -55,7 +56,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Get teacher lessons (Admin only)" })
   @Get("admin/teacher/:teacherId")
   async findByTeacherAdmin(
@@ -69,7 +70,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("teacher")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Get my lessons (Teacher only)" })
   @Get("teacher/my")
   async findMyLessons(@CurrentUser() user: IToken) {
@@ -77,7 +78,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("teacher")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Get my booked lessons (Teacher only)" })
   @Get("teacher/my/booked")
   async findMyBookedLessons(@CurrentUser() user: IToken) {
@@ -85,7 +86,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("teacher")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Get my lessons by date range (for week calendar)" })
   @Get("teacher/my/by-date-range")
   async findMyLessonsByDateRange(
@@ -96,7 +97,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("admin", "teacher", "student")
+  @Roles(RolesEnum.ADMIN, TeacherRole.TEACHER, RolesEnum.STUDENT, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "ID bo'yicha dars ma'lumotlarini olish" })
   @Get(":id")
   async findOne(@Param("id") id: string) {
@@ -104,7 +105,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("admin", "teacher")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Dars ma'lumotlarini yangilash" })
   @Patch(":id")
   async update(
@@ -115,7 +116,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("teacher")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Mark lesson as completed (Teacher only)" })
   @Patch(":id/complete")
   async complete(@Param("id") id: string, @CurrentUser() user: IToken) {
@@ -123,6 +124,7 @@ export class LessonController {
     return successRes(result);
   }
 
+  @Roles(RolesEnum.STUDENT, TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Rate a completed lesson (Student via Telegram)",
   })
@@ -132,7 +134,7 @@ export class LessonController {
     return successRes(result);
   }
 
-  @Roles("admin")
+  @Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Darsni o'chirib tashlash" })
   @Delete(":id")
   async remove(@Param("id") id: string) {

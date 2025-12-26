@@ -18,14 +18,12 @@ import {
   ApiParam,
 } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
-import { JwtSelfGuard } from "../common/guards/jwt-self.guard";
 import { CreateStudentDto } from "./dto/create-student.dto";
 import { UpdateStudentDto } from "./dto/update-student.dto";
 import { StudentsService } from "./student.service";
 import { RolesGuard } from "src/common/guards/roles.guard";
 import { Roles } from "src/common/decorators/roles.decorator";
-import { RolesEnum } from "src/common/enum";
+import { RolesEnum, TeacherRole } from "src/common/enum";
 import { BlockStudentDto } from "./dto/blockStudent.dto";
 import { IToken } from "../common/token/interface";
 import { CurrentUser } from "../common/decorators/currentUser";
@@ -33,9 +31,10 @@ import { successRes } from "../common/response/succesResponse"; // yo'lni o'zing
 
 @ApiTags("students")
 @ApiBearerAuth("access-token")
+// @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("students")
 export class StudentsController {
-  constructor(private readonly studentsService: StudentsService) {}
+  constructor(private readonly studentsService: StudentsService) { }
 
   @ApiOperation({ summary: "Yangi talaba qo'shish" })
   @ApiResponse({
@@ -49,15 +48,18 @@ export class StudentsController {
     return successRes(result, 201);
   }
 
+  // @UseGuards(JwtAuthGuard, AdminGuard)
+  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha talabalarni olish" })
   @ApiResponse({ status: 200, description: "Studentlar ro'yxati" })
   @Get()
   @ApiBearerAuth("access-token")
-  async findAll() {
-    const result = await this.studentsService.findAll();
-    return successRes(result);
+  findAll() {
+    return this.studentsService.findAll();
   }
 
+  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
+  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Students stats" })
   @ApiResponse({ status: 200, description: "Students stats" })
   @Get("stats")
@@ -68,7 +70,6 @@ export class StudentsController {
 
   @Get("me")
   @ApiOperation({ summary: "Get current student profile" })
-  @ApiBearerAuth("access-token")
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
@@ -85,6 +86,8 @@ export class StudentsController {
     return successRes(profile);
   }
 
+  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
+  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Student block" })
   @ApiResponse({ status: 200, description: "Student blocked" })
   @Post("block/:id")
@@ -96,6 +99,8 @@ export class StudentsController {
     return successRes(result);
   }
 
+  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
+  // @Roles(RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Student unblock" })
   @ApiResponse({ status: 200, description: "Student unblocked" })
   @Post("unblock/:id")
@@ -104,6 +109,7 @@ export class StudentsController {
     return successRes(result);
   }
 
+  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
   @ApiOperation({ summary: "ID bo'yicha bitta talabani olish" })
   @ApiResponse({ status: 200, description: "Talaba topildi" })
   @ApiResponse({ status: 404, description: "Talaba topilmadi" })
@@ -113,17 +119,15 @@ export class StudentsController {
     return successRes(result);
   }
 
+  // @UseGuards(JwtAuthGuard, JwtSelfGuard)
   @ApiOperation({ summary: "ID bo'yicha talabani yangilash" })
   @ApiResponse({ status: 200, description: "Talaba yangilandi" })
   @Patch(":id")
-  async update(
-    @Param("id") id: string,
-    @Body() updateStudentDto: UpdateStudentDto
-  ) {
-    const result = await this.studentsService.update(id, updateStudentDto);
-    return successRes(result);
+  update(@Param("id") id: string, @Body() updateStudentDto: UpdateStudentDto) {
+    return this.studentsService.update(id, updateStudentDto);
   }
 
+  // @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: "ID bo'yicha talabani o'chirish" })
   @ApiResponse({ status: 200, description: "Talaba o'chirildi" })
   @Delete(":id")

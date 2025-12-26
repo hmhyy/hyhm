@@ -13,20 +13,21 @@ import { UpdateTeacherPaymentDto } from "./dto/update-teacher-payment.dto";
 import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
 import { TeacherPaymentService } from "./teacherPayment.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
+import { RolesEnum } from "src/common/enum";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
 
 @ApiTags("teacher-payments")
+@ApiBearerAuth('access-token')
 @Controller("teacher-payments")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TeacherPaymentController {
-  constructor(private readonly teacherPaymentService: TeacherPaymentService) {}
+  constructor(private readonly teacherPaymentService: TeacherPaymentService) { }
 
   @Post()
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "O'qituvchiga to'lov qilish" })
   @ApiResponse({
     status: 201,
@@ -38,8 +39,7 @@ export class TeacherPaymentController {
   }
 
   @Get()
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha to'lovlar ro'yxatini olish" })
   @ApiResponse({ status: 200, description: "Barcha to'lovlar ro'yxati" })
   async findAll() {
@@ -48,7 +48,7 @@ export class TeacherPaymentController {
   }
 
   @Get(":id")
-  @Roles("admin", "teacher")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "ID bo'yicha to'lov ma'lumotini olish" })
   @ApiResponse({ status: 200, description: "To'lov ma'lumoti topildi" })
   @ApiResponse({ status: 404, description: "To'lov topilmadi" })
@@ -58,8 +58,7 @@ export class TeacherPaymentController {
   }
 
   @Patch(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "To'lov ma'lumotini yangilash yoki bekor qilish" })
   @ApiResponse({ status: 200, description: "To'lov yangilandi" })
   async update(
@@ -71,8 +70,7 @@ export class TeacherPaymentController {
   }
 
   @Delete(":id")
-  @Roles("admin")
-  @UseGuards(AdminGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "To'lovni o'chirish" })
   @ApiResponse({ status: 200, description: "To'lov o'chirildi" })
   async remove(@Param("id") id: string) {

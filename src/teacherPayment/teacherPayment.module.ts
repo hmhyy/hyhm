@@ -4,6 +4,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { TeacherPayment } from "./entities/teacherPayment.entity";
 import { TeacherPaymentController } from "./teacherPayment.controller";
 import { TeacherPaymentService } from "./teacherPayment.service";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { TeacherPaymentService } from "./teacherPayment.service";
     }),
   ],
   controllers: [TeacherPaymentController],
-  providers: [TeacherPaymentService],
+  providers: [TeacherPaymentService, JwtAuthGuard],
   exports: [TeacherPaymentService],
 })
 export class TeacherPaymentModule {}

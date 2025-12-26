@@ -25,15 +25,16 @@ import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { PaymeTransactionError } from "../common/errors/payment.error";
-import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
+import { successRes } from "../common/response/succesResponse";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
+import { RolesEnum } from "../common/enum";
 
 @ApiTags("Payment")
-@ApiBearerAuth("access-token")
 @Controller("payment")
 export class PaymentController {
   private readonly logger = new Logger(PaymentController.name);
 
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
   /**
    * Payme merchant API endpoint
@@ -249,12 +250,39 @@ export class PaymentController {
   // ==================== ADMIN ENDPOINTS ====================
 
   @Get("admin/transactions")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: Barcha tranzaksiyalarni olish",
     description: "Filter, pagination va qidiruv bilan tranzaksiyalar ro‘yxati",
   })
+  @ApiQuery({ name: "page", type: Number, required: false, example: 1 })
+  @ApiQuery({ name: "limit", type: Number, required: false, example: 20 })
+  @ApiQuery({
+    name: "state", 
+    type: String,
+    required: false,
+    enum: ["ALL", "PENDING", "PAID", "PENDING_CANCELED", "PAID_CANCELED"],
+  })
+  @ApiQuery({
+    name: "provider",
+    type: String,
+    required: false,
+    enum: ["ALL", "PAYME", "CLICK"],
+  })
+  @ApiQuery({
+    name: "search",
+    type: String,
+    required: false,
+    description: "paymeId, telefon, ism bo‘yicha qidiruv",
+  })
+  @ApiQuery({
+    name: "startDate",
+    type: String,
+    format: "date",
+    required: false,
+  })
+  @ApiQuery({ name: "endDate", type: String, format: "date", required: false })
   @ApiResponse({
     status: 200,
     description: "Tranzaksiyalar ro‘yxati va statistika",
@@ -265,8 +293,8 @@ export class PaymentController {
   }
 
   @Get("admin/transactions/:id")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: Bitta tranzaksiya tafsilotlari",
     description:
@@ -285,8 +313,8 @@ export class PaymentController {
   }
 
   @Get("admin/statistics")
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
-  @Roles("ADMIN", "SUPER_ADMIN")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({
     summary: "Admin: To‘lov statistikasi",
     description:

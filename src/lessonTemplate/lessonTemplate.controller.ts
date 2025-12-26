@@ -9,26 +9,24 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from "@nestjs/common";
-import {
-  ApiOperation,
-  ApiTags,
-  ApiResponse,
-  ApiParam,
-  ApiBody,
-} from "@nestjs/swagger";
+import { ApiOperation, ApiTags, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
+import { RolesEnum, TeacherRole } from "../common/enum";
 import { CreateLessonTemplateDto } from "./dto/create-lesson-template.dto";
 import { UpdateLessonTemplateDto } from "./dto/update-lesson-template.dto";
 import { LessonTemplateService } from "./lessonTemplate.service";
-import { successRes } from "../common/response/succesResponse"; // yo'lni o'zingizga moslashtiring
+import { Roles } from "../common/decorators/roles.decorator";
+import { RolesGuard } from "../common/guards/roles.guard";
+import { successRes } from "../common/response/succesResponse";
 
 @ApiTags("lesson-template")
+@ApiBearerAuth('access-token')
+@Roles(TeacherRole.TEACHER, RolesEnum.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("lesson-template")
 export class LessonTemplateController {
-  constructor(private readonly lessonTemplateService: LessonTemplateService) {}
+  constructor(private readonly lessonTemplateService: LessonTemplateService) { }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Yangi dars shabloni qo'shish" })
   @ApiResponse({ status: 201, description: "Shablon muvaffaqiyatli yaratildi" })
   @Post()
@@ -39,6 +37,8 @@ export class LessonTemplateController {
     return successRes(result, 201);
   }
 
+
+
   @ApiOperation({ summary: "Barcha dars shablonlarini olish" })
   @ApiResponse({ status: 200, description: "Shablonlar ro'yxati" })
   @Get()
@@ -46,6 +46,7 @@ export class LessonTemplateController {
     const result = await this.lessonTemplateService.findAll();
     return successRes(result);
   }
+
 
   @ApiOperation({ summary: "ID bo'yicha bitta dars shablonini olish" })
   @ApiResponse({ status: 200, description: "Shablon topildi" })
@@ -55,7 +56,7 @@ export class LessonTemplateController {
     return successRes(result);
   }
 
-  @UseGuards(JwtAuthGuard)
+
   @ApiOperation({ summary: "ID bo'yicha shablonni yangilash" })
   @ApiResponse({ status: 200, description: "Shablon yangilandi" })
   @Patch(":id")
@@ -70,7 +71,7 @@ export class LessonTemplateController {
     return successRes(result);
   }
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
+
   @ApiOperation({ summary: "ID bo'yicha shablonni o'chirish" })
   @ApiResponse({ status: 200, description: "Shablon o'chirildi" })
   @Delete(":id")
@@ -78,6 +79,8 @@ export class LessonTemplateController {
     const result = await this.lessonTemplateService.remove(id);
     return successRes(result);
   }
+
+
 
   @Post("templates/:id/apply")
   @ApiOperation({ summary: "Shablonni qo'llash" })

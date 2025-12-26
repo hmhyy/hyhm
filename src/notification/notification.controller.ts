@@ -8,23 +8,24 @@ import {
   Delete,
   UseGuards,
 } from "@nestjs/common";
-import { ApiOperation, ApiTags, ApiResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
 import { UpdateNotificationDto } from "./dto/update-notification.dto";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import { AdminGuard } from "../common/guards/admin.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { NotificationService } from "./notification.service";
-import { successRes } from "../common/response/succesResponse"; 
+import { successRes } from "../common/response/succesResponse";
+import { RolesEnum } from "../common/enum";
 
 @ApiTags("notifications")
+@ApiBearerAuth('access-token')
 @Controller("notifications")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class NotificationController {
-  constructor(private readonly notificationsService: NotificationService) {}
+  constructor(private readonly notificationsService: NotificationService) { }
 
-  @Roles("admin")
+  @Roles("admin") 
   @ApiOperation({ summary: "Yangi xabarnoma yaratish" })
   @ApiResponse({
     status: 201,
@@ -38,7 +39,7 @@ export class NotificationController {
     return successRes(result, 201);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Barcha xabarnomalarni ko'rish" })
   @ApiResponse({ status: 200, description: "Barcha xabarnomalar ro'yxati" })
   @Get()
@@ -47,7 +48,7 @@ export class NotificationController {
     return successRes(result);
   }
 
-  @Roles("admin", "student")
+  @Roles("admin", "student") 
   @ApiOperation({ summary: "ID bo'yicha xabarnomani olish" })
   @ApiResponse({ status: 200, description: "Xabarnoma topildi" })
   @ApiResponse({ status: 404, description: "Xabarnoma topilmadi" })
@@ -57,7 +58,7 @@ export class NotificationController {
     return successRes(result);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Xabarnomani yangilash" })
   @ApiResponse({ status: 200, description: "Xabarnoma yangilandi" })
   @Patch(":id")
@@ -72,7 +73,7 @@ export class NotificationController {
     return successRes(result);
   }
 
-  @Roles("admin")
+  @Roles(RolesEnum.ADMIN, RolesEnum.SUPER_ADMIN)
   @ApiOperation({ summary: "Xabarnomani o'chirish" })
   @ApiResponse({ status: 200, description: "Xabarnoma o'chirildi" })
   @Delete(":id")
